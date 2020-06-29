@@ -1,18 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 
-namespace HardwareRetroAchievements.Core
+namespace HardwareRetroAchievements.Core.AchievementData
 {
     public class AchievementSet
     {
-        private List<Achievement> _achievements = new List<Achievement>();
-
         public int ID { get; set; }
         public string Title { get; set; }
         public ConsoleID ConsoleID { get; set; }
         public int ForumTopicID { get; set; }
-        public int Flags { get; set; } // TODO: Find documentation on this
+        public int Flags { get; set; } // TODO: Find more documentation on this, 5 = Unofficial, 3 = Official
         public string ImageIcon { get; set; }
         public string ImageTitle { get; set; }
         public string ImageInGame { get; set; }
@@ -24,16 +20,6 @@ namespace HardwareRetroAchievements.Core
         public bool IsFinal { get; set; }
         public string ConsoleName { get; set; }
         public string RichPresencePatch { get; set; }
-        public List<Achievement> Achievements
-        {
-            get
-            {
-                return _achievements;
-            }
-            set
-            {
-                _achievements = value;
-            }
-        }
+        public List<Achievement> Achievements { get; set; } = new List<Achievement>();
     }
 }

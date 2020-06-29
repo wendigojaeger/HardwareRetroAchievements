@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace HardwareRetroAchievements.Core
+﻿namespace HardwareRetroAchievements.Core.AchievementData
 {
     public enum ConsoleID
     {

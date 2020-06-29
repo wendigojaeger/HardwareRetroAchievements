@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 using Xunit;
+using HardwareRetroAchievements.Core.AchievementData;
 
-namespace HardwareRetroAchievements.Core.Tests
+namespace HardwareRetroAchievements.Core.Tests.AchievementData
 {
     public class AchievementSetParserTest
     {

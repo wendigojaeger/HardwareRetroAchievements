@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\LibHardwareRetroAchievements\HardwareRetroAchievements.Core.csproj" />
+    <ProjectReference Include="..\HardwareRetroAchievements.Core\HardwareRetroAchievements.Core.csproj" />
   </ItemGroup>
 
 </Project>
