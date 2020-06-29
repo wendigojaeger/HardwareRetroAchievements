@@ -1,0 +1,8 @@
+/.vs
+/HardwareRetroAchievements.Core.Tests/bin
+/HardwareRetroAchievements.Core.Tests/obj
+/HardwareRetroAchievements/bin
+*.csproj.user
+/HardwareRetroAchievements/obj
+/LibHardwareRetroAchievements/bin
+/LibHardwareRetroAchievements/obj
