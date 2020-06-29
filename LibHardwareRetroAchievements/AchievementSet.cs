@@ -10,7 +10,7 @@ namespace HardwareRetroAchievements.Core
 
         public int ID { get; set; }
         public string Title { get; set; }
-        public int ConsoleID { get; set; } // TODO: Use an enum ?
+        public ConsoleID ConsoleID { get; set; }
         public int ForumTopicID { get; set; }
         public int Flags { get; set; } // TODO: Find documentation on this
         public string ImageIcon { get; set; }

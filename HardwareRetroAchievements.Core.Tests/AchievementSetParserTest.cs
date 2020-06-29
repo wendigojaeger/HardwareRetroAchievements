@@ -18,7 +18,7 @@ namespace HardwareRetroAchievements.Core.Tests
 
             Assert.Equal("Contra", achievementSet.Title);
             Assert.Equal("NES", achievementSet.ConsoleName);
-            Assert.Equal(7, achievementSet.ConsoleID);
+            Assert.Equal(ConsoleID.Nintendo, achievementSet.ConsoleID);
             Assert.Equal(283 , achievementSet.ForumTopicID);
             Assert.Equal(46, achievementSet.Achievements.Count);
 
@@ -46,7 +46,7 @@ namespace HardwareRetroAchievements.Core.Tests
 
             Assert.Equal("Mega Man X", achievementSet.Title);
             Assert.Equal("SNES", achievementSet.ConsoleName);
-            Assert.Equal(3, achievementSet.ConsoleID);
+            Assert.Equal(ConsoleID.SuperNintendo, achievementSet.ConsoleID);
             Assert.Equal(244, achievementSet.ForumTopicID);
             Assert.Equal(68, achievementSet.Achievements.Count);
 
