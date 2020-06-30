@@ -97,7 +97,9 @@ namespace HardwareRetroAchievements.Core.Evaluator
     }
 
     // Achievement condition parser grammar (ANTLR style)
-    // NUMBER: [0-9]
+    // NUMBER: [0-9]+
+    // HEX_NUMBER: [0-9a-fA-F]+
+    //
     //root: (condition_group)('S' condition_group)+ ;
     //
     //condition_group: (condition)('_' condition)+ ;
@@ -231,6 +233,8 @@ namespace HardwareRetroAchievements.Core.Evaluator
 
         private ConditionAST parseCondition()
         {
+            var startIndex = _index;
+
             ConditionAST condition = parseCompare();
 
             if (condition != null)
@@ -247,6 +251,8 @@ namespace HardwareRetroAchievements.Core.Evaluator
 
         private ConditionAST parseCompare()
         {
+            var startIndex = _index;
+
             OperandAST left = parseExpression();
 
             if (left != null)
@@ -256,6 +262,7 @@ namespace HardwareRetroAchievements.Core.Evaluator
                     ConditionCompare? compareOperator = parseCompareOperator();
                     if (compareOperator.HasValue)
                     {
+                        startIndex = _index;
                         OperandAST right = parseExpression();
 
                         if (right != null)
@@ -267,11 +274,25 @@ namespace HardwareRetroAchievements.Core.Evaluator
                                 CompareOperator = compareOperator.Value
                             };
                         }
+                        else
+                        {
+                            throw new ParserException($"Invalid right operand at column {startIndex}");
+                        }
+                    }
+                    else
+                    {
+                        throw new ParserException($"Invalid or inexistant comparison operator at column {_index}");
                     }
                 }
+                else
+                {
+                    throw new ParserException($"Invalid or inexistant comparison operator at column {_index}");
+                }
             }
-
-            return null;
+            else
+            {
+                throw new ParserException($"Invalid left operand at column {startIndex}");
+            }
         }
 
         private ConditionCompare? parseCompareOperator()
@@ -309,7 +330,7 @@ namespace HardwareRetroAchievements.Core.Evaluator
                         }
                         else
                         {
-                            return ConditionCompare.GreaterEquals;
+                            return ConditionCompare.Greater;
                         }
                     }
                 case '!':
@@ -339,14 +360,14 @@ namespace HardwareRetroAchievements.Core.Evaluator
             condition.HitCount = Convert.ToInt32(parseNumber());
 
             var peek = peekToken();
-            if (peek != '.' && peek != ')')
-            {
-                throw new ParserException($"Invalid token at column {_index}");
-            }
-            else
+            if (peek == '.' || peek == ')')
             {
                 // Eat ) or .
                 _ = eatToken();
+            }
+            else
+            { 
+                throw new ParserException($"Invalid hit count token at column {_index}");
             }
         }
 
@@ -406,6 +427,10 @@ namespace HardwareRetroAchievements.Core.Evaluator
                     Value = parseNumber()
                 };
             }
+            else
+            {
+                throw new ParserException($"Invalid token at column {_index}");
+            }
 
             return null;
         }
@@ -432,8 +457,10 @@ namespace HardwareRetroAchievements.Core.Evaluator
                     Address = parseHexNumber()
                 };
             }
-
-            return null;
+            else
+            {
+                throw new ParserException($"Invalid memory address kind at column {_index}");
+            }
         }
 
         private long parseHexNumber()
@@ -447,6 +474,11 @@ namespace HardwareRetroAchievements.Core.Evaluator
                 stringNumber.Append(digit);
 
                 peek = peekToken();
+            }
+
+            if (stringNumber.Length == 0)
+            {
+                throw new ParserException($"No valid hex number at column {_index}");
             }
 
             long result = 0;
@@ -481,6 +513,11 @@ namespace HardwareRetroAchievements.Core.Evaluator
                 stringNumber.Append(digit);
 
                 peek = peekToken();
+            }
+
+            if (stringNumber.Length == 0)
+            {
+                throw new ParserException($"No valid number at column {_index}");
             }
 
             return long.Parse(stringNumber.ToString());
