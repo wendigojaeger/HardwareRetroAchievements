@@ -199,7 +199,6 @@ namespace HardwareRetroAchievements.Core.Tests.Evaluator
 
             ram.Data[4] = 3;
             achievementInstruction.Evaluate(ram);
-
             Assert.Equal(3, condition2.CurrentHitCount);
 
             ram.Data[4] = 1;

@@ -245,11 +245,11 @@ namespace HardwareRetroAchievements.Core.Evaluator
             var result = base.Evaluate(ram);
             if (result.Succeeded)
             {
-                return (true, ReturnAction.ClearAllHitCounts);
+                return (false, ReturnAction.ClearAllHitCounts);
             }
             else
             {
-                return result;
+                return (true, ReturnAction.DoNothing);
             }
         }
     }
@@ -287,11 +287,9 @@ namespace HardwareRetroAchievements.Core.Evaluator
             foreach (var instruction in Core.Conditions)
             {
                 var coreResult = instruction.Evaluate(ram);
-                if (coreResult.Succeeded)
-                {
-                    doReturnAction(coreResult.ReturnAction);
-                }
-                else
+                doReturnAction(coreResult.ReturnAction);
+
+                if (!coreResult.Succeeded)
                 {
                     coreSucceeded = false;
                 }
