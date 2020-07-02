@@ -2,10 +2,18 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
 
 namespace HardwareRetroAchievements.Core.Evaluator
 {
+    public enum ReturnAction
+    {
+        DoNothing,
+        ClearAllHitCounts
+    }
+
     public abstract class Value
     {
         public abstract uint GetValue(IConsoleRam ram);
@@ -159,18 +167,13 @@ namespace HardwareRetroAchievements.Core.Evaluator
         }
     }
 
-    public abstract class EvaluateInstruction
-    {
-        public abstract bool Evaluate(IConsoleRam ram);
-    }
-
-    public class CompareInstruction : EvaluateInstruction
+    public class CompareInstruction
     {
         public Value Left { get; set; }
         public Value Right { get; set; }
         public ConditionCompare Operation { get; set; }
 
-        public override bool Evaluate(IConsoleRam ram)
+        public bool Evaluate(IConsoleRam ram)
         {
             if (Left == null)
             {
@@ -198,19 +201,18 @@ namespace HardwareRetroAchievements.Core.Evaluator
         }
     }
 
-    public class ConditionInstruction : EvaluateInstruction
+    public class ConditionInstruction
     {
         public int TargetHitCount { get; set; } = 0;
         public int CurrentHitCount { get; set; } = 0;
         public CompareInstruction CompareInstruction { get; set; }
 
-        public override bool Evaluate(IConsoleRam ram)
+        public virtual (bool Succeeded, ReturnAction ReturnAction) Evaluate(IConsoleRam ram)
         {
             if (CompareInstruction == null)
             {
-                return false;
+                return (false, ReturnAction.DoNothing);
             }
-
 
             if (TargetHitCount > 0 && CurrentHitCount < TargetHitCount)
             {
@@ -220,19 +222,124 @@ namespace HardwareRetroAchievements.Core.Evaluator
                 {
                     CurrentHitCount++;
 
-                    return CurrentHitCount == TargetHitCount;
+                    return (CurrentHitCount == TargetHitCount, ReturnAction.DoNothing);
                 }
                 else
                 {
-                    return false;
+                    return (false, ReturnAction.DoNothing);
                 }
             }
             else if (TargetHitCount == 0)
             {
-                return CompareInstruction.Evaluate(ram);
+                return (CompareInstruction.Evaluate(ram), ReturnAction.DoNothing);
             }
 
-            return false;
+            return (false, ReturnAction.DoNothing);
+        }
+    }
+
+    public class ResetIfConditionInstruction : ConditionInstruction
+    {
+        public override (bool Succeeded, ReturnAction ReturnAction) Evaluate(IConsoleRam ram)
+        {
+            var result = base.Evaluate(ram);
+            if (result.Succeeded)
+            {
+                return (true, ReturnAction.ClearAllHitCounts);
+            }
+            else
+            {
+                return result;
+            }
+        }
+    }
+
+    public class ConditionGroupInstruction
+    {
+        public List<ConditionInstruction> Conditions { get; set; } = new List<ConditionInstruction>();
+    }
+
+    public class AchievementInstruction
+    {
+        public ConditionGroupInstruction Core { get; set; }
+        public List<ConditionGroupInstruction> Alternates = new List<ConditionGroupInstruction>();
+
+        private IEnumerable<ConditionInstruction> AllConditions()
+        {
+            foreach (var instruction in Core.Conditions)
+            {
+                yield return instruction;
+            }
+
+            foreach (var alt in Alternates)
+            {
+                foreach (var instruction in alt.Conditions)
+                {
+                    yield return instruction;
+                }
+            }
+        }
+
+        public bool Evaluate(IConsoleRam ram)
+        {
+            bool coreSucceeded = true;
+            // Evaluate Core first
+            foreach (var instruction in Core.Conditions)
+            {
+                var coreResult = instruction.Evaluate(ram);
+                if (coreResult.Succeeded)
+                {
+                    doReturnAction(coreResult.ReturnAction);
+                }
+                else
+                {
+                    coreSucceeded = false;
+                }
+            }
+
+            if (coreSucceeded && Alternates.Count > 0)
+            {
+                bool finalResult = false;
+
+                foreach (var alt in Alternates)
+                {
+                    bool altResult = true;
+
+                    foreach (var altInst in alt.Conditions)
+                    {
+                        var instResult = altInst.Evaluate(ram);
+                        if (instResult.Succeeded)
+                        {
+                            doReturnAction(instResult.ReturnAction);
+                        }
+                        else
+                        {
+                            altResult = false;
+                        }
+                    }
+
+                    finalResult |= altResult;
+                }
+
+                return finalResult;
+            }
+            
+            return coreSucceeded;
+        }
+
+        private void doReturnAction(ReturnAction action)
+        {
+            switch (action)
+            {
+                case ReturnAction.DoNothing:
+                    break;
+                case ReturnAction.ClearAllHitCounts:
+                    foreach (var child in AllConditions())
+                    {
+                        child.CurrentHitCount = 0;
+                    }
+                    break;
+            }
         }
     }
 }
