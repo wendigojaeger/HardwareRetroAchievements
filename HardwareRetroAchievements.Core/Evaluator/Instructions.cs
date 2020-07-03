@@ -248,22 +248,38 @@ namespace HardwareRetroAchievements.Core.Evaluator
     {
     }
 
+    public class OrNextConditionInstruction : ConditionInstruction
+    {
+    }
+
+
     public class ConditionGroupInstruction
     {
         private struct Context
         {
             public bool Succeeded;
             public bool? AndNext;
+            public bool? OrNext;
         }
 
         public List<ConditionInstruction> Conditions { get; set; } = new List<ConditionInstruction>();
+
+        public ConditionGroupInstruction()
+        {
+        }
+
+        public ConditionGroupInstruction(IEnumerable<ConditionInstruction> items)
+        {
+            Conditions = new List<ConditionInstruction>(items);
+        }
 
         public bool Evaluate(AchievementInstruction parent, IConsoleRam ram)
         {
             Context context = new Context
             {
                 Succeeded = true,
-                AndNext = null
+                AndNext = null,
+                OrNext = null,
             };
 
             // Evaluate Core first
@@ -282,6 +298,12 @@ namespace HardwareRetroAchievements.Core.Evaluator
                 {
                     currentResult &= context.AndNext.Value;
                     context.AndNext = null;
+                }
+
+                if (context.OrNext.HasValue)
+                {
+                    currentResult |= context.OrNext.Value;
+                    context.OrNext = null;
                 }
 
                 switch (instruction)
@@ -309,6 +331,11 @@ namespace HardwareRetroAchievements.Core.Evaluator
                     case AndNextConditionInstruction _:
                         {
                             context.AndNext = currentResult;
+                            break;
+                        }
+                    case OrNextConditionInstruction _:
+                        {
+                            context.OrNext = currentResult;
                             break;
                         }
                 }

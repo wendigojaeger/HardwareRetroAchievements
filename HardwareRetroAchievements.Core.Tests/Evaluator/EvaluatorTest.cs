@@ -71,7 +71,6 @@ namespace HardwareRetroAchievements.Core.Tests.Evaluator
             FakeConsoleRam ram = new FakeConsoleRam(0xFF);
             ram.Data[4] = 4;
 
-
             // 0xH0004 < d0xH004
             ReadMemoryValue readMemory = new ReadMemoryValue
             {
@@ -151,39 +150,45 @@ namespace HardwareRetroAchievements.Core.Tests.Evaluator
 
             ConstValue value = new ConstValue(8);
 
-            ConditionInstruction condition1 = new ConditionInstruction();
-            condition1.CompareInstruction = new CompareInstruction()
+            ConditionInstruction condition1 = new ConditionInstruction
             {
-                Left = levelMemoryValue,
-                Right = value,
-                Operation = ConditionCompare.Equals
+                CompareInstruction = new CompareInstruction()
+                {
+                    Left = levelMemoryValue,
+                    Right = value,
+                    Operation = ConditionCompare.Equals
+                }
             };
 
-            ConditionInstruction condition2 = new ConditionInstruction();
-            condition2.CompareInstruction = new CompareInstruction()
+            ConditionInstruction condition2 = new ConditionInstruction
             {
-                Left = levelMemoryValue,
-                Right = new DeltaValue(levelMemoryValue),
-                Operation = ConditionCompare.Greater,
-            };
-            condition2.TargetHitCount = 8;
-
-            ResetIfConditionInstruction resetIfCondition3 = new ResetIfConditionInstruction();
-            resetIfCondition3.CompareInstruction = new CompareInstruction()
-            {
-                Left = levelMemoryValue,
-                Right = new DeltaValue(levelMemoryValue),
-                Operation = ConditionCompare.Less
+                CompareInstruction = new CompareInstruction()
+                {
+                    Left = levelMemoryValue,
+                    Right = new DeltaValue(levelMemoryValue),
+                    Operation = ConditionCompare.Greater,
+                },
+                TargetHitCount = 8
             };
 
-            AchievementInstruction achievementInstruction = new AchievementInstruction();
-            achievementInstruction.Core = new ConditionGroupInstruction()
+            ResetIfConditionInstruction resetIfCondition3 = new ResetIfConditionInstruction
             {
-                Conditions = new List<ConditionInstruction>(new[] {
+                CompareInstruction = new CompareInstruction()
+                {
+                    Left = levelMemoryValue,
+                    Right = new DeltaValue(levelMemoryValue),
+                    Operation = ConditionCompare.Less
+                }
+            };
+
+            AchievementInstruction achievementInstruction = new AchievementInstruction
+            {
+                Core = new ConditionGroupInstruction(new[] {
                     condition1,
                     condition2,
                     resetIfCondition3
-                })
+                }
+            )
             };
 
             Assert.False(achievementInstruction.Evaluate(ram));
@@ -252,10 +257,10 @@ namespace HardwareRetroAchievements.Core.Tests.Evaluator
 
             AchievementInstruction achivement = new AchievementInstruction
             {
-                Core = new ConditionGroupInstruction()
-                {
-                    Conditions = new List<ConditionInstruction>(new[] { pauseIfCondition1, condition2 })
-                }
+                Core = new ConditionGroupInstruction(new[] {
+                    pauseIfCondition1,
+                    condition2
+                })
             };
 
             achivement.Evaluate(ram);
@@ -345,16 +350,13 @@ namespace HardwareRetroAchievements.Core.Tests.Evaluator
 
             AchievementInstruction achievement = new AchievementInstruction()
             {
-                Core = new ConditionGroupInstruction()
+                Core = new ConditionGroupInstruction(new[]
                 {
-                    Conditions = new List<ConditionInstruction>(new[]
-                    {
-                        condition1,
-                        condition2,
-                        condition3,
-                        condition4
-                    })
-                }
+                    condition1,
+                    condition2,
+                    condition3,
+                    condition4
+                })
             };
 
             achievement.Evaluate(ram);
@@ -367,6 +369,83 @@ namespace HardwareRetroAchievements.Core.Tests.Evaluator
             ram.Data[0x0003] = 1;
             achievement.Evaluate(ram);
             Assert.Equal(2, condition4.CurrentHitCount);
+        }
+
+        [Fact]
+        public void OrNextShouldWork()
+        {
+            // OrNext 0x0001 == 1
+            // PauseIf 0x0002 == 1
+            // 0x0003 >= 2 Hit 5
+            FakeConsoleRam ram = new FakeConsoleRam(0x0FF);
+            ram.Data[0x0001] = 0;
+            ram.Data[0x0002] = 0;
+            ram.Data[0x0003] = 4;
+
+            OrNextConditionInstruction condition1 = new OrNextConditionInstruction()
+            {
+                CompareInstruction = new CompareInstruction()
+                {
+                    Left = new ReadMemoryValue()
+                    {
+                        Address = 0x0001,
+                        Kind = MemoryAddressKind.Int8
+                    },
+                    Right = new ConstValue(1),
+                    Operation = ConditionCompare.Equals,
+                }
+            };
+
+            PauseIfConditionInstruction condition2 = new PauseIfConditionInstruction()
+            {
+                CompareInstruction = new CompareInstruction()
+                {
+                    Left = new ReadMemoryValue()
+                    {
+                        Address = 0x0002,
+                        Kind = MemoryAddressKind.Int8
+                    },
+                    Right = new ConstValue(1)
+                }
+            };
+
+            ConditionInstruction condition3 = new ConditionInstruction()
+            {
+                CompareInstruction = new CompareInstruction()
+                {
+                    Left = new ReadMemoryValue()
+                    {
+                        Address = 0x0003,
+                        Kind = MemoryAddressKind.Int8
+                    },
+                    Right = new ConstValue(2),
+                    Operation = ConditionCompare.GreaterEquals
+                },
+                TargetHitCount = 5
+            };
+
+            AchievementInstruction achievement = new AchievementInstruction()
+            {
+                Core = new ConditionGroupInstruction(new[] {
+                    condition1, condition2, condition3
+                })
+            };
+
+            achievement.Evaluate(ram);
+            Assert.Equal(1, condition3.CurrentHitCount);
+
+            ram.Data[0x0001] = 1;
+            achievement.Evaluate(ram);
+            Assert.Equal(1, condition3.CurrentHitCount);
+
+            ram.Data[0x0001] = 0;
+            ram.Data[0x0002] = 1;
+            achievement.Evaluate(ram);
+            Assert.Equal(1, condition3.CurrentHitCount);
+
+            ram.Data[0x0002] = 0;
+            achievement.Evaluate(ram);
+            Assert.Equal(2, condition3.CurrentHitCount);
         }
     }
 }
