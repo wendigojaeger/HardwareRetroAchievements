@@ -10,6 +10,8 @@ namespace HardwareRetroAchievements.Core.Tests.Evaluator
         [Fact]
         public void ShouldEvalEqualsMemoryWithConstValue()
         {
+            EvaluatorContext context = new EvaluatorContext();
+
             FakeConsoleRam ram = new FakeConsoleRam(0xFF);
             ram.Data[4] = 42;
 
@@ -29,13 +31,15 @@ namespace HardwareRetroAchievements.Core.Tests.Evaluator
                 Operation = ConditionCompare.Equals
             };
 
-            var result = compareInst.Evaluate(ram);
+            var result = compareInst.Evaluate(ram, context);
             Assert.True(result);
         }
 
         [Fact]
         public void ShouldOnlyReturnTrueWhenHitCountIsReached()
         {
+            EvaluatorContext context = new EvaluatorContext();
+
             FakeConsoleRam ram = new FakeConsoleRam(0xFF);
             ram.Data[4] = 42;
 
@@ -61,13 +65,15 @@ namespace HardwareRetroAchievements.Core.Tests.Evaluator
                 CompareInstruction = compareInst
             };
 
-            Assert.False(condition.Evaluate(ram));
-            Assert.True(condition.Evaluate(ram));
+            Assert.False(condition.Evaluate(ram, context));
+            Assert.True(condition.Evaluate(ram, context));
         }
 
         [Fact]
         public void ShouldEvaluateDeltaValue()
         {
+            EvaluatorContext context = new EvaluatorContext();
+
             FakeConsoleRam ram = new FakeConsoleRam(0xFF);
             ram.Data[4] = 4;
 
@@ -87,17 +93,19 @@ namespace HardwareRetroAchievements.Core.Tests.Evaluator
                 Operation = ConditionCompare.Less
             };
 
-            Assert.False(compareInst.Evaluate(ram));
+            Assert.False(compareInst.Evaluate(ram, context));
 
             ram.Data[4] = 2;
 
-            Assert.True(compareInst.Evaluate(ram));
-            Assert.False(compareInst.Evaluate(ram));
+            Assert.True(compareInst.Evaluate(ram, context));
+            Assert.False(compareInst.Evaluate(ram, context));
         }
 
         [Fact]
         public void ShouldEvaluatePriorValue()
         {
+            EvaluatorContext context = new EvaluatorContext();
+
             FakeConsoleRam ram = new FakeConsoleRam(0xFF);
             ram.Data[4] = 25;
 
@@ -117,23 +125,23 @@ namespace HardwareRetroAchievements.Core.Tests.Evaluator
                 Operation = ConditionCompare.Less
             };
 
-            Assert.False(compareInst.Evaluate(ram));
-            Assert.False(compareInst.Evaluate(ram));
+            Assert.False(compareInst.Evaluate(ram, context));
+            Assert.False(compareInst.Evaluate(ram, context));
 
             ram.Data[4] = 30;
 
-            Assert.False(compareInst.Evaluate(ram));
+            Assert.False(compareInst.Evaluate(ram, context));
 
             ram.Data[4] = 35;
 
-            Assert.False(compareInst.Evaluate(ram));
-            Assert.False(compareInst.Evaluate(ram));
-            Assert.False(compareInst.Evaluate(ram));
+            Assert.False(compareInst.Evaluate(ram, context));
+            Assert.False(compareInst.Evaluate(ram, context));
+            Assert.False(compareInst.Evaluate(ram, context));
 
             ram.Data[4] = 10;
 
-            Assert.True(compareInst.Evaluate(ram));
-            Assert.True(compareInst.Evaluate(ram));
+            Assert.True(compareInst.Evaluate(ram, context));
+            Assert.True(compareInst.Evaluate(ram, context));
         }
 
         [Fact]
@@ -446,6 +454,56 @@ namespace HardwareRetroAchievements.Core.Tests.Evaluator
             ram.Data[0x0002] = 0;
             achievement.Evaluate(ram);
             Assert.Equal(2, condition3.CurrentHitCount);
+        }
+
+        [Fact]
+        public void AddSourceShouldWork()
+        {
+            // Add Source 0x0001
+            // 0x0002 > 1
+            FakeConsoleRam ram = new FakeConsoleRam(0xFF);
+            ram.Data[0x0001] = 0;
+            ram.Data[0x0002] = 1;
+
+            AddSourceInstruction condition1 = new AddSourceInstruction()
+            {
+                CompareInstruction = new CompareInstruction()
+                {
+                    Left = new ReadMemoryValue()
+                    {
+                        Address = 0x0001,
+                        Kind = MemoryAddressKind.Int8
+                    }
+                }
+            };
+
+            ConditionInstruction condition2 = new ConditionInstruction()
+            {
+                CompareInstruction = new CompareInstruction()
+                {
+                    Left = new ReadMemoryValue()
+                    {
+                        Address = 0x0002,
+                        Kind = MemoryAddressKind.Int8
+                    },
+                    Right = new ConstValue(1),
+                    Operation = ConditionCompare.Greater
+                }
+            };
+
+            AchievementInstruction achievement = new AchievementInstruction()
+            {
+                Core = new ConditionGroupInstruction(new[]
+                {
+                    condition1,
+                    condition2
+                })
+            };
+
+            Assert.False(achievement.Evaluate(ram));
+
+            ram.Data[0x0001] = 3;
+            Assert.True(achievement.Evaluate(ram));
         }
     }
 }

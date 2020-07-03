@@ -1,9 +1,18 @@
 ﻿using HardwareRetroAchievements.Core.Console;
 using System.Collections.Generic;
 using System.Numerics;
+using System.Threading;
 
 namespace HardwareRetroAchievements.Core.Evaluator
 {
+    public class EvaluatorContext
+    {
+        public bool Succeeded = true;
+        public bool? AndNext = null;
+        public bool? OrNext = null;
+        public int? AddValue = null;
+    }
+
     public enum ReturnAction
     {
         DoNothing,
@@ -14,19 +23,19 @@ namespace HardwareRetroAchievements.Core.Evaluator
 
     public abstract class Value
     {
-        public abstract uint GetValue(IConsoleRam ram);
+        public abstract int GetValue(IConsoleRam ram);
     }
 
     public class ConstValue : Value
     {
-        private readonly uint _constValue;
+        private readonly int _constValue;
 
-        public ConstValue(uint value)
+        public ConstValue(int value)
         {
             _constValue = value;
         }
 
-        public override uint GetValue(IConsoleRam ram)
+        public override int GetValue(IConsoleRam ram)
         {
             return _constValue;
         }
@@ -35,14 +44,14 @@ namespace HardwareRetroAchievements.Core.Evaluator
     public class DeltaValue : Value
     {
         private readonly Value _child;
-        private uint _previousValue = 0;
+        private int _previousValue = 0;
 
         public DeltaValue(Value child)
         {
             _child = child;
         }
 
-        public override uint GetValue(IConsoleRam ram)
+        public override int GetValue(IConsoleRam ram)
         {
             var current = _child.GetValue(ram);
             var result = _previousValue;
@@ -54,15 +63,15 @@ namespace HardwareRetroAchievements.Core.Evaluator
     public class PriorValue : Value
     {
         private readonly Value _child;
-        private uint _previousValue = 0;
-        private uint _priorValue = 0;
+        private int _previousValue = 0;
+        private int _priorValue = 0;
 
         public PriorValue(Value child)
         {
             _child = child;
         }
 
-        public override uint GetValue(IConsoleRam ram)
+        public override int GetValue(IConsoleRam ram)
         {
             var current = _child.GetValue(ram);
 
@@ -82,59 +91,59 @@ namespace HardwareRetroAchievements.Core.Evaluator
         public long Address { get; set; }
         public MemoryAddressKind Kind { get; set; }
 
-        public override uint GetValue(IConsoleRam ram)
+        public override int GetValue(IConsoleRam ram)
         {
             switch (Kind)
             {
                 case MemoryAddressKind.Bit0:
                     {
                         var value = ram.ReadInt8(Address);
-                        return (uint)((value & (1 << 0)) >> 0);
+                        return (value & (1 << 0)) >> 0;
                     }
                 case MemoryAddressKind.Bit1:
                     {
                         var value = ram.ReadInt8(Address);
-                        return (uint)((value & (1 << 1)) >> 1);
+                        return ((value & (1 << 1)) >> 1);
                     }
                 case MemoryAddressKind.Bit2:
                     {
                         var value = ram.ReadInt8(Address);
-                        return (uint)((value & (1 << 2)) >> 2);
+                        return ((value & (1 << 2)) >> 2);
                     }
                 case MemoryAddressKind.Bit3:
                     {
                         var value = ram.ReadInt8(Address);
-                        return (uint)((value & (1 << 3)) >> 3);
+                        return ((value & (1 << 3)) >> 3);
                     }
                 case MemoryAddressKind.Bit4:
                     {
                         var value = ram.ReadInt8(Address);
-                        return (uint)((value & (1 << 4)) >> 4);
+                        return ((value & (1 << 4)) >> 4);
                     }
                 case MemoryAddressKind.Bit5:
                     {
                         var value = ram.ReadInt8(Address);
-                        return (uint)((value & (1 << 5)) >> 5);
+                        return ((value & (1 << 5)) >> 5);
                     }
                 case MemoryAddressKind.Bit6:
                     {
                         var value = ram.ReadInt8(Address);
-                        return (uint)((value & (1 << 6)) >> 6);
+                        return ((value & (1 << 6)) >> 6);
                     }
                 case MemoryAddressKind.Bit7:
                     {
                         var value = ram.ReadInt8(Address);
-                        return (uint)((value & (1 << 7)) >> 7);
+                        return ((value & (1 << 7)) >> 7);
                     }
                 case MemoryAddressKind.Lower4:
                     {
                         var value = ram.ReadInt8(Address);
-                        return (uint)(value & 0x0F);
+                        return (value & 0x0F);
                     }
                 case MemoryAddressKind.Upper4:
                     {
                         var value = ram.ReadInt8(Address);
-                        return (uint)((value & 0xF0) >> 4);
+                        return ((value & 0xF0) >> 4);
                     }
                 case MemoryAddressKind.Int8:
                     {
@@ -146,16 +155,16 @@ namespace HardwareRetroAchievements.Core.Evaluator
                     }
                 case MemoryAddressKind.Int24:
                     {
-                        return ram.ReadUInt24(Address);
+                        return (int)ram.ReadUInt24(Address);
                     }
                 case MemoryAddressKind.Int32:
                     {
-                        return ram.ReadUInt32(Address);
+                        return (int)ram.ReadUInt32(Address);
                     }
                 case MemoryAddressKind.BitCount:
                     {
                         var value = ram.ReadInt8(Address);
-                        return (uint)BitOperations.PopCount(value);
+                        return BitOperations.PopCount(value);
                     }
                 default:
                     break;
@@ -171,7 +180,7 @@ namespace HardwareRetroAchievements.Core.Evaluator
         public Value Right { get; set; }
         public ConditionCompare Operation { get; set; }
 
-        public bool Evaluate(IConsoleRam ram)
+        public bool Evaluate(IConsoleRam ram, EvaluatorContext context)
         {
             if (Left == null)
             {
@@ -185,6 +194,12 @@ namespace HardwareRetroAchievements.Core.Evaluator
 
             var leftValue = Left.GetValue(ram);
             var rightValue = Right.GetValue(ram);
+
+            if (context.AddValue.HasValue)
+            {
+                leftValue = context.AddValue.Value + leftValue;
+                context.AddValue = null;
+            }
 
             return Operation switch
             {
@@ -205,7 +220,7 @@ namespace HardwareRetroAchievements.Core.Evaluator
         public int CurrentHitCount { get; set; } = 0;
         public CompareInstruction CompareInstruction { get; set; }
 
-        public virtual bool Evaluate(IConsoleRam ram)
+        public virtual bool Evaluate(IConsoleRam ram, EvaluatorContext context)
         {
             if (CompareInstruction == null)
             {
@@ -214,7 +229,7 @@ namespace HardwareRetroAchievements.Core.Evaluator
 
             if (TargetHitCount > 0 && CurrentHitCount < TargetHitCount)
             {
-                var result = CompareInstruction.Evaluate(ram);
+                var result = CompareInstruction.Evaluate(ram, context);
 
                 if (result)
                 {
@@ -229,7 +244,7 @@ namespace HardwareRetroAchievements.Core.Evaluator
             }
             else if (TargetHitCount == 0)
             {
-                return CompareInstruction.Evaluate(ram);
+                return CompareInstruction.Evaluate(ram, context);
             }
 
             return false;
@@ -252,16 +267,27 @@ namespace HardwareRetroAchievements.Core.Evaluator
     {
     }
 
+    public class AddSourceInstruction : ConditionInstruction
+    {
+        public override bool Evaluate(IConsoleRam ram, EvaluatorContext context)
+        {
+            var readMemoryValue = CompareInstruction.Left as ReadMemoryValue;
+            if (readMemoryValue != null)
+            {
+                if (!context.AddValue.HasValue)
+                {
+                    context.AddValue = 0;
+                }
+
+                context.AddValue += readMemoryValue.GetValue(ram);
+            }
+
+            return true;
+        }
+    }
 
     public class ConditionGroupInstruction
     {
-        private struct Context
-        {
-            public bool Succeeded;
-            public bool? AndNext;
-            public bool? OrNext;
-        }
-
         public List<ConditionInstruction> Conditions { get; set; } = new List<ConditionInstruction>();
 
         public ConditionGroupInstruction()
@@ -275,12 +301,7 @@ namespace HardwareRetroAchievements.Core.Evaluator
 
         public bool Evaluate(AchievementInstruction parent, IConsoleRam ram)
         {
-            Context context = new Context
-            {
-                Succeeded = true,
-                AndNext = null,
-                OrNext = null,
-            };
+            EvaluatorContext context = new EvaluatorContext();
 
             // Evaluate Core first
             foreach (var instruction in Conditions)
@@ -292,7 +313,7 @@ namespace HardwareRetroAchievements.Core.Evaluator
                     return false;
                 }
 
-                var currentResult = instruction.Evaluate(ram);
+                var currentResult = instruction.Evaluate(ram, context);
 
                 if (context.AndNext.HasValue)
                 {
