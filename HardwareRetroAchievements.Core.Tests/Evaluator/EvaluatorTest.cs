@@ -1,5 +1,6 @@
 ﻿using HardwareRetroAchievements.Core.Evaluator;
 using HardwareRetroAchievements.Core.Tests.Helpers;
+using Newtonsoft.Json.Bson;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -205,6 +206,71 @@ namespace HardwareRetroAchievements.Core.Tests.Evaluator
             achievementInstruction.Evaluate(ram);
 
             Assert.Equal(0, condition2.CurrentHitCount);
+        }
+
+        [Fact]
+        public void ShouldPauseOnPauseIfCondition()
+        {
+            // PauseIf mem 0x0002 == 1
+            // Mem 0x0003 >= 5, Hit 100
+
+            FakeConsoleRam ram = new FakeConsoleRam(0xFF);
+            ram.Data[0x0002] = 0;
+            ram.Data[0x0003] = 6;
+
+            ReadMemoryValue pauseMemoryValue = new ReadMemoryValue
+            {
+                Address = 0x0002,
+                Kind = MemoryAddressKind.Int8
+            };
+
+            ReadMemoryValue otherMemoryValue = new ReadMemoryValue
+            {
+                Address = 0x0003,
+                Kind = MemoryAddressKind.Int8
+            };
+
+            PauseIfConditionInstruction pauseIfCondition1 = new PauseIfConditionInstruction()
+            {
+                CompareInstruction = new CompareInstruction()
+                {
+                    Left = pauseMemoryValue,
+                    Right = new ConstValue(1),
+                    Operation = ConditionCompare.Equals
+                }
+            };
+
+            ConditionInstruction condition2 = new ConditionInstruction()
+            {
+                CompareInstruction = new CompareInstruction()
+                {
+                    Left = otherMemoryValue,
+                    Right = new ConstValue(5),
+                    Operation = ConditionCompare.GreaterEquals
+                },
+                TargetHitCount = 10
+            };
+
+            AchievementInstruction achivement = new AchievementInstruction
+            {
+                Core = new ConditionGroupInstruction()
+                {
+                    Conditions = new List<ConditionInstruction>(new[] { pauseIfCondition1, condition2 })
+                }
+            };
+
+            achivement.Evaluate(ram);
+            achivement.Evaluate(ram);
+
+            Assert.Equal(2, condition2.CurrentHitCount);
+
+            ram.Data[0x0002] = 1;
+
+            achivement.Evaluate(ram);
+            Assert.Equal(2, condition2.CurrentHitCount);
+
+            achivement.Evaluate(ram);
+            Assert.Equal(2, condition2.CurrentHitCount);
         }
     }
 }

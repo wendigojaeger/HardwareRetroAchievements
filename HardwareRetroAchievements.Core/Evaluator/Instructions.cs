@@ -11,7 +11,8 @@ namespace HardwareRetroAchievements.Core.Evaluator
     public enum ReturnAction
     {
         DoNothing,
-        ClearAllHitCounts
+        ClearAllHitCounts,
+        PauseConditionGroup
     }
 
     public abstract class Value
@@ -254,6 +255,27 @@ namespace HardwareRetroAchievements.Core.Evaluator
         }
     }
 
+    public class PauseIfConditionInstruction : ConditionInstruction
+    {
+        public override (bool Succeeded, ReturnAction ReturnAction) Evaluate(IConsoleRam ram)
+        {
+            if (TargetHitCount > 0 && CurrentHitCount == TargetHitCount)
+            {
+                return (true, ReturnAction.PauseConditionGroup);
+            }
+
+            var result = base.Evaluate(ram);
+            if (result.Succeeded)
+            {
+                return (true, ReturnAction.PauseConditionGroup);
+            }
+            else
+            {
+                return (true, ReturnAction.DoNothing);
+            }
+        }
+    }
+
     public class ConditionGroupInstruction
     {
         public List<ConditionInstruction> Conditions { get; set; } = new List<ConditionInstruction>();
@@ -287,11 +309,10 @@ namespace HardwareRetroAchievements.Core.Evaluator
             foreach (var instruction in Core.Conditions)
             {
                 var coreResult = instruction.Evaluate(ram);
-                doReturnAction(coreResult.ReturnAction);
 
-                if (!coreResult.Succeeded)
+                if (!doReturnAction(coreResult, ref coreSucceeded))
                 {
-                    coreSucceeded = false;
+                    break;
                 }
             }
 
@@ -306,13 +327,9 @@ namespace HardwareRetroAchievements.Core.Evaluator
                     foreach (var altInst in alt.Conditions)
                     {
                         var instResult = altInst.Evaluate(ram);
-                        if (instResult.Succeeded)
+                        if (!doReturnAction(instResult, ref altResult))
                         {
-                            doReturnAction(instResult.ReturnAction);
-                        }
-                        else
-                        {
-                            altResult = false;
+                            break;
                         }
                     }
 
@@ -325,9 +342,9 @@ namespace HardwareRetroAchievements.Core.Evaluator
             return coreSucceeded;
         }
 
-        private void doReturnAction(ReturnAction action)
+        private bool doReturnAction((bool Succeeded, ReturnAction ReturnAction) result, ref bool setSucceeded)
         {
-            switch (action)
+            switch (result.ReturnAction)
             {
                 case ReturnAction.DoNothing:
                     break;
@@ -337,7 +354,17 @@ namespace HardwareRetroAchievements.Core.Evaluator
                         child.CurrentHitCount = 0;
                     }
                     break;
+                case ReturnAction.PauseConditionGroup:
+                    setSucceeded = false;
+                    return false;
             }
+
+            if (!result.Succeeded)
+            {
+                setSucceeded = false;
+            }
+
+            return true;
         }
     }
 }
