@@ -271,16 +271,27 @@ namespace HardwareRetroAchievements.Core.Evaluator
     {
         public override bool Evaluate(IConsoleRam ram, EvaluatorContext context)
         {
-            var readMemoryValue = CompareInstruction.Left as ReadMemoryValue;
-            if (readMemoryValue != null)
+            if (!context.AddValue.HasValue)
             {
-                if (!context.AddValue.HasValue)
-                {
-                    context.AddValue = 0;
-                }
-
-                context.AddValue += readMemoryValue.GetValue(ram);
+                context.AddValue = 0;
             }
+
+            context.AddValue += CompareInstruction.Left.GetValue(ram);
+
+            return true;
+        }
+    }
+
+    public class SubSourceInstruction : ConditionInstruction
+    {
+        public override bool Evaluate(IConsoleRam ram, EvaluatorContext context)
+        {
+            if (!context.AddValue.HasValue)
+            {
+                context.AddValue = 0;
+            }
+
+            context.AddValue += -CompareInstruction.Left.GetValue(ram);
 
             return true;
         }

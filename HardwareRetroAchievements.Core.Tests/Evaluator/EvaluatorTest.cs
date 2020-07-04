@@ -505,5 +505,55 @@ namespace HardwareRetroAchievements.Core.Tests.Evaluator
             ram.Data[0x0001] = 3;
             Assert.True(achievement.Evaluate(ram));
         }
+
+        [Fact]
+        public void SubSourceShouldWork()
+        {
+            // SubSource Delta 0x0002
+            // Mem 0x0002 == 2
+            FakeConsoleRam ram = new FakeConsoleRam(0xFF);
+
+            ram.Data[0x0002] = 2;
+
+            SubSourceInstruction condition1 = new SubSourceInstruction()
+            {
+                CompareInstruction = new CompareInstruction()
+                {
+                    Left = new DeltaValue(new ReadMemoryValue()
+                    {
+                        Address = 0x0002,
+                        Kind = MemoryAddressKind.Int8
+                    })
+                }
+            };
+
+            ConditionInstruction condition2 = new ConditionInstruction()
+            {
+                CompareInstruction = new CompareInstruction()
+                {
+                    Left = new ReadMemoryValue()
+                    {
+                        Address = 0x0002,
+                        Kind = MemoryAddressKind.Int8
+                    },
+                    Right = new ConstValue(2),
+                    Operation = ConditionCompare.Equals,
+                }
+            };
+
+            AchievementInstruction achievement = new AchievementInstruction()
+            {
+                Core = new ConditionGroupInstruction(new[]
+                {
+                    condition1, condition2
+                })
+            };
+
+            achievement.Evaluate(ram);
+
+            ram.Data[0x0002] = 4;
+
+            Assert.True(achievement.Evaluate(ram));
+        }
     }
 }
