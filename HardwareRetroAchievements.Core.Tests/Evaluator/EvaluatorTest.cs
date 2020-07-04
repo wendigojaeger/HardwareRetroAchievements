@@ -613,5 +613,55 @@ namespace HardwareRetroAchievements.Core.Tests.Evaluator
             Assert.False(achievement.Evaluate(ram));
             Assert.True(achievement.Evaluate(ram));
         }
+
+        [Fact]
+        public void AddAddressShouldWork()
+        {
+            // Add Address Mem 16-bit 0x0010 (value = 0x0180)
+            // Mem 8-bit 0x0004 == 0x15
+
+            FakeConsoleRam ram = new FakeConsoleRam(0xFFFF);
+
+            AddAddressInstruction condition1 = new AddAddressInstruction()
+            {
+                CompareInstruction = new CompareInstruction()
+                {
+                    Left = new ReadMemoryValue()
+                    {
+                        Address = 0x0010,
+                        Kind = MemoryAddressKind.Int16
+                    }
+                }
+            };
+
+            ConditionInstruction condition2 = new ConditionInstruction()
+            {
+                CompareInstruction = new CompareInstruction()
+                {
+                    Left = new ReadMemoryValue()
+                    {
+                        Address = 0x0004,
+                        Kind = MemoryAddressKind.Int8
+                    },
+                    Right = new ConstValue(0x15),
+                    Operation = ConditionCompare.Equals
+                }
+            };
+
+            AchievementInstruction achievement = new AchievementInstruction()
+            {
+                Core = new ConditionGroupInstruction(new[]
+                {
+                    condition1, condition2
+                })
+            };
+
+            ram.Data[0x0004] = 0xBD;
+            ram.Data[0x0010] = 0x80;
+            ram.Data[0x0011] = 0x01;
+            ram.Data[0x0184] = 0x15;
+
+            Assert.True(achievement.Evaluate(ram));
+        }
     }
 }

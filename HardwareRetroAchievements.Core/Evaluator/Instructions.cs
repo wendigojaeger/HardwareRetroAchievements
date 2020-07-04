@@ -11,6 +11,7 @@ namespace HardwareRetroAchievements.Core.Evaluator
         public bool? OrNext = null;
         public int? AddValue = null;
         public int? AddHits = null;
+        public long? AddAddress = null;
     }
 
     public enum ReturnAction
@@ -23,7 +24,7 @@ namespace HardwareRetroAchievements.Core.Evaluator
 
     public abstract class Value
     {
-        public abstract int GetValue(IConsoleRam ram);
+        public abstract int GetValue(IConsoleRam ram, EvaluatorContext context);
     }
 
     public class ConstValue : Value
@@ -35,7 +36,7 @@ namespace HardwareRetroAchievements.Core.Evaluator
             _constValue = value;
         }
 
-        public override int GetValue(IConsoleRam ram)
+        public override int GetValue(IConsoleRam ram, EvaluatorContext context)
         {
             return _constValue;
         }
@@ -51,9 +52,9 @@ namespace HardwareRetroAchievements.Core.Evaluator
             _child = child;
         }
 
-        public override int GetValue(IConsoleRam ram)
+        public override int GetValue(IConsoleRam ram, EvaluatorContext context)
         {
-            var current = _child.GetValue(ram);
+            var current = _child.GetValue(ram, context);
             var result = _previousValue;
             _previousValue = current;
             return result;
@@ -71,9 +72,9 @@ namespace HardwareRetroAchievements.Core.Evaluator
             _child = child;
         }
 
-        public override int GetValue(IConsoleRam ram)
+        public override int GetValue(IConsoleRam ram, EvaluatorContext context)
         {
-            var current = _child.GetValue(ram);
+            var current = _child.GetValue(ram, context);
 
             if (_previousValue != current)
             {
@@ -91,79 +92,86 @@ namespace HardwareRetroAchievements.Core.Evaluator
         public long Address { get; set; }
         public MemoryAddressKind Kind { get; set; }
 
-        public override int GetValue(IConsoleRam ram)
+        public override int GetValue(IConsoleRam ram, EvaluatorContext context)
         {
+            var effectiveAddress = Address;
+            if (context.AddAddress.HasValue)
+            {
+                effectiveAddress += context.AddAddress.Value;
+                context.AddAddress = null;
+            }
+
             switch (Kind)
             {
                 case MemoryAddressKind.Bit0:
                     {
-                        var value = ram.ReadInt8(Address);
+                        var value = ram.ReadInt8(effectiveAddress);
                         return (value & (1 << 0)) >> 0;
                     }
                 case MemoryAddressKind.Bit1:
                     {
-                        var value = ram.ReadInt8(Address);
+                        var value = ram.ReadInt8(effectiveAddress);
                         return ((value & (1 << 1)) >> 1);
                     }
                 case MemoryAddressKind.Bit2:
                     {
-                        var value = ram.ReadInt8(Address);
+                        var value = ram.ReadInt8(effectiveAddress);
                         return ((value & (1 << 2)) >> 2);
                     }
                 case MemoryAddressKind.Bit3:
                     {
-                        var value = ram.ReadInt8(Address);
+                        var value = ram.ReadInt8(effectiveAddress);
                         return ((value & (1 << 3)) >> 3);
                     }
                 case MemoryAddressKind.Bit4:
                     {
-                        var value = ram.ReadInt8(Address);
+                        var value = ram.ReadInt8(effectiveAddress);
                         return ((value & (1 << 4)) >> 4);
                     }
                 case MemoryAddressKind.Bit5:
                     {
-                        var value = ram.ReadInt8(Address);
+                        var value = ram.ReadInt8(effectiveAddress);
                         return ((value & (1 << 5)) >> 5);
                     }
                 case MemoryAddressKind.Bit6:
                     {
-                        var value = ram.ReadInt8(Address);
+                        var value = ram.ReadInt8(effectiveAddress);
                         return ((value & (1 << 6)) >> 6);
                     }
                 case MemoryAddressKind.Bit7:
                     {
-                        var value = ram.ReadInt8(Address);
+                        var value = ram.ReadInt8(effectiveAddress);
                         return ((value & (1 << 7)) >> 7);
                     }
                 case MemoryAddressKind.Lower4:
                     {
-                        var value = ram.ReadInt8(Address);
+                        var value = ram.ReadInt8(effectiveAddress);
                         return (value & 0x0F);
                     }
                 case MemoryAddressKind.Upper4:
                     {
-                        var value = ram.ReadInt8(Address);
+                        var value = ram.ReadInt8(effectiveAddress);
                         return ((value & 0xF0) >> 4);
                     }
                 case MemoryAddressKind.Int8:
                     {
-                        return ram.ReadInt8(Address);
+                        return ram.ReadInt8(effectiveAddress);
                     }
                 case MemoryAddressKind.Int16:
                     {
-                        return ram.ReadInt16(Address);
+                        return ram.ReadInt16(effectiveAddress);
                     }
                 case MemoryAddressKind.Int24:
                     {
-                        return (int)ram.ReadUInt24(Address);
+                        return (int)ram.ReadUInt24(effectiveAddress);
                     }
                 case MemoryAddressKind.Int32:
                     {
-                        return (int)ram.ReadUInt32(Address);
+                        return (int)ram.ReadUInt32(effectiveAddress);
                     }
                 case MemoryAddressKind.BitCount:
                     {
-                        var value = ram.ReadInt8(Address);
+                        var value = ram.ReadInt8(effectiveAddress);
                         return BitOperations.PopCount(value);
                     }
                 default:
@@ -192,8 +200,8 @@ namespace HardwareRetroAchievements.Core.Evaluator
                 return false;
             }
 
-            var leftValue = Left.GetValue(ram);
-            var rightValue = Right.GetValue(ram);
+            var leftValue = Left.GetValue(ram, context);
+            var rightValue = Right.GetValue(ram, context);
 
             if (context.AddValue.HasValue)
             {
@@ -294,7 +302,7 @@ namespace HardwareRetroAchievements.Core.Evaluator
                 context.AddValue = 0;
             }
 
-            context.AddValue += CompareInstruction.Left.GetValue(ram);
+            context.AddValue += CompareInstruction.Left.GetValue(ram, context);
 
             return true;
         }
@@ -309,7 +317,7 @@ namespace HardwareRetroAchievements.Core.Evaluator
                 context.AddValue = 0;
             }
 
-            context.AddValue += -CompareInstruction.Left.GetValue(ram);
+            context.AddValue += -CompareInstruction.Left.GetValue(ram, context);
 
             return true;
         }
@@ -317,6 +325,15 @@ namespace HardwareRetroAchievements.Core.Evaluator
     
     public class AddHitsInstruction : ConditionInstruction
     {
+    }
+
+    public class AddAddressInstruction : ConditionInstruction
+    {
+        public override bool Evaluate(IConsoleRam ram, EvaluatorContext context)
+        {
+            context.AddAddress = CompareInstruction.Left.GetValue(ram, context);
+            return true;
+        }
     }
 
     public class ConditionGroupInstruction
@@ -386,6 +403,8 @@ namespace HardwareRetroAchievements.Core.Evaluator
                             context.AddHits = instruction.CurrentHitCount;
                             break;
                         }
+                    default:
+                        break;
                 }
 
                 if (!currentResult)
