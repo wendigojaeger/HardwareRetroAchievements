@@ -1,6 +1,5 @@
 ﻿using HardwareRetroAchievements.Core.Evaluator;
 using HardwareRetroAchievements.Core.Tests.Helpers;
-using System.Collections.Generic;
 using Xunit;
 
 namespace HardwareRetroAchievements.Core.Tests.Evaluator
@@ -553,6 +552,65 @@ namespace HardwareRetroAchievements.Core.Tests.Evaluator
 
             ram.Data[0x0002] = 4;
 
+            Assert.True(achievement.Evaluate(ram));
+        }
+
+        [Fact]
+        public void AddHitsShouldWork()
+        {
+            // AddHit 0x0001 == 1
+            // Mem 0x0002 == 1 Hit 4
+
+            FakeConsoleRam ram = new FakeConsoleRam(0xFF);
+            ram.Data[0x0001] = 1;
+            ram.Data[0x0002] = 0;
+
+            AddHitsInstruction condition1 = new AddHitsInstruction()
+            {
+                CompareInstruction = new CompareInstruction()
+                {
+                    Left = new ReadMemoryValue()
+                    {
+                        Address = 0x0001,
+                        Kind = MemoryAddressKind.Int8
+                    },
+                    Right = new ConstValue(1),
+                    Operation = ConditionCompare.Equals
+                }
+            };
+
+            ConditionInstruction condition2 = new ConditionInstruction()
+            {
+                CompareInstruction = new CompareInstruction()
+                {
+                    Left = new ReadMemoryValue()
+                    {
+                        Address = 0x0002,
+                        Kind = MemoryAddressKind.Int8
+                    },
+                    Right = new ConstValue(1),
+                    Operation = ConditionCompare.Equals
+                },
+                TargetHitCount = 4
+            };
+
+            AchievementInstruction achievement = new AchievementInstruction()
+            {
+                Core = new ConditionGroupInstruction(new[]
+                {
+                    condition1, condition2
+                })
+            };
+
+            Assert.False(achievement.Evaluate(ram));
+            Assert.False(achievement.Evaluate(ram));
+
+            Assert.Equal(2, condition1.CurrentHitCount);
+
+            ram.Data[0x0001] = 0;
+            ram.Data[0x0002] = 1;
+
+            Assert.False(achievement.Evaluate(ram));
             Assert.True(achievement.Evaluate(ram));
         }
     }

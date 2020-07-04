@@ -1,7 +1,6 @@
 ﻿using HardwareRetroAchievements.Core.Console;
 using System.Collections.Generic;
 using System.Numerics;
-using System.Threading;
 
 namespace HardwareRetroAchievements.Core.Evaluator
 {
@@ -11,6 +10,7 @@ namespace HardwareRetroAchievements.Core.Evaluator
         public bool? AndNext = null;
         public bool? OrNext = null;
         public int? AddValue = null;
+        public int? AddHits = null;
     }
 
     public enum ReturnAction
@@ -227,27 +227,45 @@ namespace HardwareRetroAchievements.Core.Evaluator
                 return false;
             }
 
-            if (TargetHitCount > 0 && CurrentHitCount < TargetHitCount)
-            {
-                var result = CompareInstruction.Evaluate(ram, context);
+            bool result = CompareInstruction.Evaluate(ram, context);
 
-                if (result)
-                {
-                    CurrentHitCount++;
-
-                    return CurrentHitCount == TargetHitCount;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-            else if (TargetHitCount == 0)
+            if (context.AndNext.HasValue)
             {
-                return CompareInstruction.Evaluate(ram, context);
+                result &= context.AndNext.Value;
+                context.AndNext = null;
             }
 
-            return false;
+            if (context.OrNext.HasValue)
+            {
+                result |= context.OrNext.Value;
+                context.OrNext = null;
+            }
+
+            if (result)
+            {
+                if (TargetHitCount == 0)
+                {
+                    ++CurrentHitCount;
+                }
+                else if (CurrentHitCount < TargetHitCount)
+                {
+                    ++CurrentHitCount;
+                    result = (CurrentHitCount == TargetHitCount);
+                }
+            }
+            else if (CurrentHitCount > 0)
+            {
+                result = CurrentHitCount == TargetHitCount;
+            }
+
+            if (TargetHitCount > 0 && context.AddHits.HasValue)
+            {
+                var hitCountToCheck = CurrentHitCount + context.AddHits.Value;
+                result = hitCountToCheck >= TargetHitCount;
+                context.AddHits = null;
+            }
+
+            return result;
         }
     }
 
@@ -296,6 +314,10 @@ namespace HardwareRetroAchievements.Core.Evaluator
             return true;
         }
     }
+    
+    public class AddHitsInstruction : ConditionInstruction
+    {
+    }
 
     public class ConditionGroupInstruction
     {
@@ -325,18 +347,6 @@ namespace HardwareRetroAchievements.Core.Evaluator
                 }
 
                 var currentResult = instruction.Evaluate(ram, context);
-
-                if (context.AndNext.HasValue)
-                {
-                    currentResult &= context.AndNext.Value;
-                    context.AndNext = null;
-                }
-
-                if (context.OrNext.HasValue)
-                {
-                    currentResult |= context.OrNext.Value;
-                    context.OrNext = null;
-                }
 
                 switch (instruction)
                 {
@@ -368,6 +378,12 @@ namespace HardwareRetroAchievements.Core.Evaluator
                     case OrNextConditionInstruction _:
                         {
                             context.OrNext = currentResult;
+                            break;
+                        }
+                    case AddHitsInstruction _:
+                        {
+                            currentResult = true;
+                            context.AddHits = instruction.CurrentHitCount;
                             break;
                         }
                 }
