@@ -1,17 +1,23 @@
 ﻿using HardwareRetroAchievements.Core.Console;
+using Microsoft.VisualBasic;
 using System.Collections.Generic;
+using System.Net.WebSockets;
 using System.Numerics;
 
 namespace HardwareRetroAchievements.Core.Evaluator
 {
     public class EvaluatorContext
     {
-        public bool Succeeded = true;
         public bool? AndNext = null;
         public bool? OrNext = null;
         public int? AddValue = null;
         public int? AddHits = null;
         public long? AddAddress = null;
+        public int? MeasuredValue = null;
+        public int? MeasuredTarget = null;
+        public bool CanMeasure = true;
+        public int TempMeasureValue = 0;
+        public int TempTotalHit = 0;
     }
 
     public enum ReturnAction
@@ -266,10 +272,13 @@ namespace HardwareRetroAchievements.Core.Evaluator
                 result = CurrentHitCount == TargetHitCount;
             }
 
+            context.TempTotalHit = CurrentHitCount;
+
             if (TargetHitCount > 0 && context.AddHits.HasValue)
             {
                 var hitCountToCheck = CurrentHitCount + context.AddHits.Value;
                 result = hitCountToCheck >= TargetHitCount;
+                context.TempTotalHit = hitCountToCheck;
                 context.AddHits = null;
             }
 
@@ -336,6 +345,51 @@ namespace HardwareRetroAchievements.Core.Evaluator
         }
     }
 
+    public class MeasureInstruction : ConditionInstruction
+    {
+        public override bool Evaluate(IConsoleRam ram, EvaluatorContext context)
+        {
+            context.TempTotalHit = 0;
+
+            if (TargetHitCount == 0)
+            {
+                context.TempMeasureValue = CompareInstruction.Left.GetValue(ram, context);
+                if (context.AddValue.HasValue)
+                {
+                    context.TempMeasureValue += context.AddValue.Value;
+                }
+
+                if (!context.MeasuredTarget.HasValue)
+                {
+                    context.MeasuredTarget = CompareInstruction.Right.GetValue(ram, context);
+                }
+            }
+
+            var result = base.Evaluate(ram, context);
+
+            if (TargetHitCount > 0)
+            {
+                context.TempMeasureValue = context.TempTotalHit;
+                if (!context.MeasuredTarget.HasValue)
+                {
+                    context.MeasuredTarget = TargetHitCount;
+                }
+            }
+
+            return result;
+        }
+    }
+
+    public class MeasureIfCondition : ConditionInstruction
+    {
+        public override bool Evaluate(IConsoleRam ram, EvaluatorContext context)
+        {
+            var result = base.Evaluate(ram, context);
+            context.CanMeasure = result;
+            return result;
+        }
+    }
+
     public class ConditionGroupInstruction
     {
         public List<ConditionInstruction> Conditions { get; set; } = new List<ConditionInstruction>();
@@ -349,11 +403,10 @@ namespace HardwareRetroAchievements.Core.Evaluator
             Conditions = new List<ConditionInstruction>(items);
         }
 
-        public bool Evaluate(AchievementInstruction parent, IConsoleRam ram)
+        public bool Evaluate(AchievementInstruction parent, IConsoleRam ram, EvaluatorContext context)
         {
-            EvaluatorContext context = new EvaluatorContext();
+            bool groupValue = true;
 
-            // Evaluate Core first
             foreach (var instruction in Conditions)
             {
                 if (instruction is PauseIfConditionInstruction 
@@ -375,6 +428,9 @@ namespace HardwareRetroAchievements.Core.Evaluator
                                 {
                                     childCondition.CurrentHitCount = 0;
                                 }
+
+                                context.MeasuredTarget = null;
+                                context.MeasuredValue = null;
                             }
                         }
                         break;
@@ -382,7 +438,6 @@ namespace HardwareRetroAchievements.Core.Evaluator
                         {
                             if (currentResult)
                             {
-                                context.Succeeded = false;
                                 return false;
                             }
                             break;
@@ -407,13 +462,19 @@ namespace HardwareRetroAchievements.Core.Evaluator
                         break;
                 }
 
-                if (!currentResult)
+                groupValue &= currentResult;
+            }
+
+            if (context.TempMeasureValue > 0 && context.CanMeasure)
+            {
+                if ((context.MeasuredValue.HasValue && context.TempMeasureValue > context.MeasuredValue.Value)
+                    || !context.MeasuredValue.HasValue)
                 {
-                    context.Succeeded = false;
+                    context.MeasuredValue = context.TempMeasureValue;
                 }
             }
 
-            return context.Succeeded;
+            return groupValue;
         }
     }
 
@@ -421,6 +482,7 @@ namespace HardwareRetroAchievements.Core.Evaluator
     {
         public ConditionGroupInstruction Core { get; set; }
         public List<ConditionGroupInstruction> Alternates = new List<ConditionGroupInstruction>();
+        public EvaluatorContext Context { get; private set; } = new EvaluatorContext();
 
         internal IEnumerable<ConditionInstruction> AllConditions()
         {
@@ -440,7 +502,10 @@ namespace HardwareRetroAchievements.Core.Evaluator
 
         public bool Evaluate(IConsoleRam ram)
         {
-            bool coreSet = Core.Evaluate(this, ram);
+            Context.TempMeasureValue = 0;
+            Context.MeasuredValue = null;
+
+            bool coreSet = Core.Evaluate(this, ram, Context);
           
             if (coreSet && Alternates.Count > 0)
             {
@@ -448,7 +513,7 @@ namespace HardwareRetroAchievements.Core.Evaluator
 
                 foreach (var alt in Alternates)
                 {
-                    finalResult |= alt.Evaluate(this, ram);
+                    finalResult |= alt.Evaluate(this, ram, Context);
                 }
 
                 return finalResult;

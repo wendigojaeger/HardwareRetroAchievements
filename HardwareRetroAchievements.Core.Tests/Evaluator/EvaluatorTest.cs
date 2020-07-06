@@ -1,5 +1,7 @@
-﻿using HardwareRetroAchievements.Core.Evaluator;
+﻿using HardwareRetroAchievements.Core.AchievementData;
+using HardwareRetroAchievements.Core.Evaluator;
 using HardwareRetroAchievements.Core.Tests.Helpers;
+using NuGet.Frameworks;
 using Xunit;
 
 namespace HardwareRetroAchievements.Core.Tests.Evaluator
@@ -662,6 +664,178 @@ namespace HardwareRetroAchievements.Core.Tests.Evaluator
             ram.Data[0x0184] = 0x15;
 
             Assert.True(achievement.Evaluate(ram));
+        }
+
+        [Fact]
+        public void MeasureFlagShouldWork()
+        {
+            // Measure 0x0002 >= 80
+            FakeConsoleRam ram = new FakeConsoleRam(0xFF);
+
+            ram.Data[0x0000] = 0;
+            ram.Data[0x0001] = 0x12;
+            ram.Data[0x0002] = 0x34;
+            ram.Data[0x0003] = 0xAB;
+            ram.Data[0x0004] = 0x56;
+
+            MeasureInstruction condition1 = new MeasureInstruction()
+            {
+                CompareInstruction = new CompareInstruction()
+                {
+                    Left = new ReadMemoryValue()
+                    {
+                        Address = 0x0002,
+                        Kind = MemoryAddressKind.Int8,
+                    },
+                    Right = new ConstValue(80),
+                    Operation = ConditionCompare.GreaterEquals
+                }
+            };
+
+            AchievementInstruction achivement = new AchievementInstruction()
+            {
+                Core = new ConditionGroupInstruction(new[] { condition1 })
+            };
+
+            Assert.False(achivement.Evaluate(ram));
+            Assert.Equal(0x34, achivement.Context.MeasuredValue.Value);
+            Assert.Equal(80, achivement.Context.MeasuredTarget.Value);
+
+            ram.Data[0x0002] = 79;
+            Assert.False(achivement.Evaluate(ram));
+            Assert.Equal(79, achivement.Context.MeasuredValue.Value);
+            Assert.Equal(80, achivement.Context.MeasuredTarget.Value);
+
+            ram.Data[0x0002] = 80;
+            Assert.True(achivement.Evaluate(ram));
+            Assert.Equal(80, achivement.Context.MeasuredValue.Value);
+            Assert.Equal(80, achivement.Context.MeasuredTarget.Value);
+
+            ram.Data[0x0002] = 255;
+            Assert.True(achivement.Evaluate(ram));
+            Assert.Equal(255, achivement.Context.MeasuredValue.Value);
+            Assert.Equal(80, achivement.Context.MeasuredTarget.Value);
+        }
+
+        [Fact]
+        public void MeasureFlagWithTargetHitShouldWork()
+        {
+            // Measure 0x0002 == 52(3)
+            FakeConsoleRam ram = new FakeConsoleRam(0xFF);
+
+            ram.Data[0x0000] = 0;
+            ram.Data[0x0001] = 0x12;
+            ram.Data[0x0002] = 0x34;
+            ram.Data[0x0003] = 0xAB;
+            ram.Data[0x0004] = 0x56;
+
+            MeasureInstruction condition1 = new MeasureInstruction()
+            {
+                CompareInstruction = new CompareInstruction()
+                {
+                    Left = new ReadMemoryValue()
+                    {
+                        Address = 0x0002,
+                        Kind = MemoryAddressKind.Int8,
+                    },
+                    Right = new ConstValue(0x34),
+                    Operation = ConditionCompare.GreaterEquals
+                },
+                TargetHitCount = 3
+            };
+
+            AchievementInstruction achivement = new AchievementInstruction()
+            {
+                Core = new ConditionGroupInstruction(new[] { condition1 })
+            };
+
+            Assert.False(achivement.Evaluate(ram));
+            Assert.Equal(1, achivement.Context.MeasuredValue.Value);
+            Assert.Equal(3, achivement.Context.MeasuredTarget.Value);
+
+            Assert.False(achivement.Evaluate(ram));
+            Assert.Equal(2, achivement.Context.MeasuredValue.Value);
+            Assert.Equal(3, achivement.Context.MeasuredTarget.Value);
+
+            Assert.True(achivement.Evaluate(ram));
+            Assert.Equal(3, achivement.Context.MeasuredValue.Value);
+            Assert.Equal(3, achivement.Context.MeasuredTarget.Value);
+
+            Assert.True(achivement.Evaluate(ram));
+            Assert.Equal(3, achivement.Context.MeasuredValue.Value);
+            Assert.Equal(3, achivement.Context.MeasuredTarget.Value);
+        }
+
+        [Fact]
+        public void MeasureIfFlagShouldWork()
+        {
+            // Measure 0x0002 == 52 (3)
+            // MeasureIf 0x0001 == 1
+
+            FakeConsoleRam ram = new FakeConsoleRam(0xFF);
+
+            ram.Data[0x0001] = 0;
+            ram.Data[0x0002] = 52;
+
+            MeasureInstruction condition1 = new MeasureInstruction()
+            {
+                CompareInstruction = new CompareInstruction()
+                {
+                    Left = new ReadMemoryValue()
+                    {
+                        Address = 0x0002,
+                        Kind = MemoryAddressKind.Int8
+                    },
+                    Right = new ConstValue(52),
+                    Operation = ConditionCompare.Equals
+                },
+                TargetHitCount = 3
+            };
+
+            MeasureIfCondition condition2 = new MeasureIfCondition()
+            {
+                CompareInstruction = new CompareInstruction()
+                {
+                    Left = new ReadMemoryValue()
+                    {
+                        Address = 0x0001,
+                        Kind = MemoryAddressKind.Int8,
+                    },
+                    Right = new ConstValue(1),
+                    Operation = ConditionCompare.Equals
+                }
+            };
+
+            AchievementInstruction achievement = new AchievementInstruction()
+            {
+                Core = new ConditionGroupInstruction(new ConditionInstruction[] { 
+                    condition1, condition2 
+                })
+            };
+
+            ram.Data[0x0001] = 0;
+            Assert.False(achievement.Evaluate(ram));
+            Assert.Equal(1, condition1.CurrentHitCount);
+            Assert.False(achievement.Context.MeasuredValue.HasValue);
+            Assert.Equal(3, achievement.Context.MeasuredTarget.Value);
+
+            ram.Data[0x0001] = 1;
+            Assert.False(achievement.Evaluate(ram));
+            Assert.Equal(2, condition1.CurrentHitCount);
+            Assert.Equal(2, achievement.Context.MeasuredValue.Value);
+            Assert.Equal(3, achievement.Context.MeasuredTarget.Value);
+
+            ram.Data[0x0001] = 0;
+            Assert.False(achievement.Evaluate(ram));
+            Assert.Equal(3, condition1.CurrentHitCount);
+            Assert.False(achievement.Context.MeasuredValue.HasValue);
+            Assert.Equal(3, achievement.Context.MeasuredTarget.Value);
+
+            ram.Data[0x0001] = 1;
+            Assert.True(achievement.Evaluate(ram));
+            Assert.Equal(3, condition1.CurrentHitCount);
+            Assert.Equal(3, achievement.Context.MeasuredValue.Value);
+            Assert.Equal(3, achievement.Context.MeasuredTarget.Value);
         }
     }
 }
