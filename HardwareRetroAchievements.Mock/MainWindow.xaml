@@ -1,0 +1,22 @@
+﻿<Window x:Class="HardwareRetroAchievements.Mock.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:HardwareRetroAchievements.Mock"
+        xmlns:provider="clr-namespace:HardwareRetroAchievements.Mock.Provider"
+        xmlns:views="clr-namespace:HardwareRetroAchievements.Views;assembly=HardwareRetroAchievements"
+                xmlns:viewModels="clr-namespace:HardwareRetroAchievements.ViewModels;assembly=HardwareRetroAchievements"
+
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800">
+    <views:AchievementsViewer x:Name="AchievementsViewer">
+        <views:AchievementsViewer.DataContext>
+            <viewModels:AchievementsViewerVM>
+                <viewModels:AchievementsViewerVM.AchievementsProvider>
+                    <provider:MockAchievementsProvider/>
+                </viewModels:AchievementsViewerVM.AchievementsProvider>
+            </viewModels:AchievementsViewerVM>
+        </views:AchievementsViewer.DataContext>
+    </views:AchievementsViewer>
+</Window>

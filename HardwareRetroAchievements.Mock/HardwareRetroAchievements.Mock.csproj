@@ -4,11 +4,17 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <UseWPF>true</UseWPF>
-    <RootNamespace>HardwareRetroAchievements</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\HardwareRetroAchievements.Core\HardwareRetroAchievements.Core.csproj" />
+    <ProjectReference Include="..\HardwareRetroAchievements\HardwareRetroAchievements.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="AchievementSets\3\637.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>
