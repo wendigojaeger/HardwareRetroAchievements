@@ -302,7 +302,7 @@ namespace HardwareRetroAchievements.Core.Evaluator
     {
     }
 
-    public class AddSourceInstruction : ConditionInstruction
+    public class AddSourceConditionInstruction : ConditionInstruction
     {
         public override bool Evaluate(IConsoleRam ram, EvaluatorContext context)
         {
@@ -317,7 +317,7 @@ namespace HardwareRetroAchievements.Core.Evaluator
         }
     }
 
-    public class SubSourceInstruction : ConditionInstruction
+    public class SubSourceConditionInstruction : ConditionInstruction
     {
         public override bool Evaluate(IConsoleRam ram, EvaluatorContext context)
         {
@@ -332,11 +332,11 @@ namespace HardwareRetroAchievements.Core.Evaluator
         }
     }
     
-    public class AddHitsInstruction : ConditionInstruction
+    public class AddHitsConditionInstruction : ConditionInstruction
     {
     }
 
-    public class AddAddressInstruction : ConditionInstruction
+    public class AddAddressConditionInstruction : ConditionInstruction
     {
         public override bool Evaluate(IConsoleRam ram, EvaluatorContext context)
         {
@@ -345,7 +345,7 @@ namespace HardwareRetroAchievements.Core.Evaluator
         }
     }
 
-    public class MeasureInstruction : ConditionInstruction
+    public class MeasureConditionInstruction : ConditionInstruction
     {
         public override bool Evaluate(IConsoleRam ram, EvaluatorContext context)
         {
@@ -380,7 +380,7 @@ namespace HardwareRetroAchievements.Core.Evaluator
         }
     }
 
-    public class MeasureIfCondition : ConditionInstruction
+    public class MeasureIfConditionInstruction : ConditionInstruction
     {
         public override bool Evaluate(IConsoleRam ram, EvaluatorContext context)
         {
@@ -452,7 +452,7 @@ namespace HardwareRetroAchievements.Core.Evaluator
                             context.OrNext = currentResult;
                             break;
                         }
-                    case AddHitsInstruction _:
+                    case AddHitsConditionInstruction _:
                         {
                             currentResult = true;
                             context.AddHits = instruction.CurrentHitCount;

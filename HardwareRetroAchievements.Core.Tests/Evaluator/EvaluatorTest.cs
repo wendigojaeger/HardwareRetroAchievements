@@ -466,7 +466,7 @@ namespace HardwareRetroAchievements.Core.Tests.Evaluator
             ram.Data[0x0001] = 0;
             ram.Data[0x0002] = 1;
 
-            AddSourceInstruction condition1 = new AddSourceInstruction()
+            AddSourceConditionInstruction condition1 = new AddSourceConditionInstruction()
             {
                 CompareInstruction = new CompareInstruction()
                 {
@@ -516,7 +516,7 @@ namespace HardwareRetroAchievements.Core.Tests.Evaluator
 
             ram.Data[0x0002] = 2;
 
-            SubSourceInstruction condition1 = new SubSourceInstruction()
+            SubSourceConditionInstruction condition1 = new SubSourceConditionInstruction()
             {
                 CompareInstruction = new CompareInstruction()
                 {
@@ -567,7 +567,7 @@ namespace HardwareRetroAchievements.Core.Tests.Evaluator
             ram.Data[0x0001] = 1;
             ram.Data[0x0002] = 0;
 
-            AddHitsInstruction condition1 = new AddHitsInstruction()
+            AddHitsConditionInstruction condition1 = new AddHitsConditionInstruction()
             {
                 CompareInstruction = new CompareInstruction()
                 {
@@ -624,7 +624,7 @@ namespace HardwareRetroAchievements.Core.Tests.Evaluator
 
             FakeConsoleRam ram = new FakeConsoleRam(0xFFFF);
 
-            AddAddressInstruction condition1 = new AddAddressInstruction()
+            AddAddressConditionInstruction condition1 = new AddAddressConditionInstruction()
             {
                 CompareInstruction = new CompareInstruction()
                 {
@@ -678,7 +678,7 @@ namespace HardwareRetroAchievements.Core.Tests.Evaluator
             ram.Data[0x0003] = 0xAB;
             ram.Data[0x0004] = 0x56;
 
-            MeasureInstruction condition1 = new MeasureInstruction()
+            MeasureConditionInstruction condition1 = new MeasureConditionInstruction()
             {
                 CompareInstruction = new CompareInstruction()
                 {
@@ -729,7 +729,7 @@ namespace HardwareRetroAchievements.Core.Tests.Evaluator
             ram.Data[0x0003] = 0xAB;
             ram.Data[0x0004] = 0x56;
 
-            MeasureInstruction condition1 = new MeasureInstruction()
+            MeasureConditionInstruction condition1 = new MeasureConditionInstruction()
             {
                 CompareInstruction = new CompareInstruction()
                 {
@@ -777,7 +777,7 @@ namespace HardwareRetroAchievements.Core.Tests.Evaluator
             ram.Data[0x0001] = 0;
             ram.Data[0x0002] = 52;
 
-            MeasureInstruction condition1 = new MeasureInstruction()
+            MeasureConditionInstruction condition1 = new MeasureConditionInstruction()
             {
                 CompareInstruction = new CompareInstruction()
                 {
@@ -792,7 +792,7 @@ namespace HardwareRetroAchievements.Core.Tests.Evaluator
                 TargetHitCount = 3
             };
 
-            MeasureIfCondition condition2 = new MeasureIfCondition()
+            MeasureIfConditionInstruction condition2 = new MeasureIfConditionInstruction()
             {
                 CompareInstruction = new CompareInstruction()
                 {

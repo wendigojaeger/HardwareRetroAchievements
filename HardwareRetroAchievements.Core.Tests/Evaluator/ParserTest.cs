@@ -68,7 +68,7 @@ namespace HardwareRetroAchievements.Core.Tests.Evaluator
         [InlineData("P:0xH1234=8", OperandFlag.PauseIf)]
         [InlineData("A:0xH1234=8", OperandFlag.AddSource)]
         [InlineData("B:0xH1234=8", OperandFlag.SubSource)]
-        [InlineData("C:0xH1234=8", OperandFlag.AddHit)]
+        [InlineData("C:0xH1234=8", OperandFlag.AddHits)]
         [InlineData("M:0xH1234=8", OperandFlag.Measured)]
         [InlineData("Q:0xH1234=8", OperandFlag.MeasuredIf)]
         [InlineData("I:0xH1234=8", OperandFlag.AddAddress)]
