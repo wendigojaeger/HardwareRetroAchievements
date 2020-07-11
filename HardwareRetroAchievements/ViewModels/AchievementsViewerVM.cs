@@ -58,6 +58,8 @@ namespace HardwareRetroAchievements.ViewModels
             //todo call async
             _allAchievements = AchievementsProvider.GetAchievements(CurrentConsole).Result.ToList();
             _allAchievementsVMs = _allAchievements.Select(x => new AchievementSetVM(x)).ToList();
+
+            SelectedAchievementSetVM = _allAchievementsVMs.FirstOrDefault(x => SelectedAchievementSetVM != null ? x.AchievementSet.ID == SelectedAchievementSetVM.AchievementSet.ID : true);
         }
 
         private AchievementSetVM _selectedAchievementSetVM;

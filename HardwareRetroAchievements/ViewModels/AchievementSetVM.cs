@@ -9,13 +9,18 @@ namespace HardwareRetroAchievements.ViewModels
     {
         public AchievementSetVM(AchievementSet achievementSet)
         {
+            if (achievementSet == null)
+                throw new ArgumentNullException(nameof(achievementSet));
+
             AchievementSet = achievementSet;
         }
 
         public AchievementSet AchievementSet { get; }
 
-        public string IconUrl => $"http://retroachievements.org{AchievementSet.ImageIcon}";
-        public string BoxArtUrl => $"http://retroachievements.org{AchievementSet.ImageBoxArt}";
+        public string ImageIconUrl => $"http://retroachievements.org{AchievementSet.ImageIcon}";
+        public string ImageBoxArtUrl => $"http://retroachievements.org{AchievementSet.ImageBoxArt}";
+        public string ImageTitleUrl => $"http://retroachievements.org{AchievementSet.ImageTitle}";
+        public string ImageInGameUrl => $"http://retroachievements.org{AchievementSet.ImageIngame}";
 
     }
 }
