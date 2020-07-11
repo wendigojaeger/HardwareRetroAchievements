@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
-using System.Security.Cryptography;
-using System.Text;
 using System.Threading.Tasks;
 using HardwareRetroAchievements.Core.AchievementData;
-using HardwareRetroAchievements.Core.Provider;
 
-namespace HardwareRetroAchievements.Mock.Provider
+namespace HardwareRetroAchievements.Core.Provider.Impl
 {
     public class MockAchievementsProvider : IAchievementsProvider
     {

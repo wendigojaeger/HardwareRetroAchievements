@@ -4,7 +4,17 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:views="clr-namespace:HardwareRetroAchievements.Views"
+        xmlns:viewModels="clr-namespace:HardwareRetroAchievements.ViewModels"
+        xmlns:providers="clr-namespace:HardwareRetroAchievements.Core.Provider.Impl;assembly=HardwareRetroAchievements.Core"
         mc:Ignorable="d"
         Title="Hardware Retro Achievements" Height="450" Width="800">
-    <views:AchievementsViewer x:Name="AchievementsViewer" />
+    <views:AchievementsViewer x:Name="AchievementsViewer">
+        <views:AchievementsViewer.DataContext>
+            <viewModels:AchievementsViewerVM>
+                <viewModels:AchievementsViewerVM.AchievementsProvider>
+                    <providers:MockAchievementsProvider />
+                </viewModels:AchievementsViewerVM.AchievementsProvider>
+            </viewModels:AchievementsViewerVM>
+        </views:AchievementsViewer.DataContext>
+    </views:AchievementsViewer>
 </Window>
