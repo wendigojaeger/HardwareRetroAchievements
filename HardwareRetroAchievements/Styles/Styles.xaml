@@ -1,10 +1,23 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:local="clr-namespace:HardwareRetroAchievements.Styles">
+                    xmlns:styles="clr-namespace:HardwareRetroAchievements.Styles">
 
     <Style x:Key="{x:Type TextBlock}" TargetType="{x:Type TextBlock}" BasedOn="{StaticResource {x:Type TextBlock}}">
         <Setter Property="TextWrapping" Value="Wrap"/>
         <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"/>
+    </Style>
+
+    <Style x:Key="{x:Static styles:Keys.AlternatingBackgroundItemStyleKey}" TargetType="{x:Type ListBoxItem}">
+        <Setter Property="Background" 
+              Value="{Binding RelativeSource={RelativeSource Self},
+                     Path=(ItemsControl.AlternationIndex),
+                     Converter={StaticResource {x:Static styles:Keys.AlternateBackgroundConverterKey}}}"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+    </Style>
+
+    <Style x:Key="{x:Static styles:Keys.NoSelectionListBoxStyleKey}" TargetType="{x:Type ListBox}" BasedOn="{StaticResource {x:Type ItemsControl}}">
+        <Setter Property="BorderBrush" Value="Transparent"/>
     </Style>
 
 </ResourceDictionary>

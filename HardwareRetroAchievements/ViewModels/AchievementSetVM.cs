@@ -1,6 +1,7 @@
 ﻿using HardwareRetroAchievements.Core.AchievementData;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace HardwareRetroAchievements.ViewModels
@@ -13,9 +14,12 @@ namespace HardwareRetroAchievements.ViewModels
                 throw new ArgumentNullException(nameof(achievementSet));
 
             AchievementSet = achievementSet;
+            AllAchievements = achievementSet.Achievements.Select(x => new AchievementVM(x)).ToList();
         }
 
         public AchievementSet AchievementSet { get; }
+
+        public List<AchievementVM> AllAchievements { get; }
 
         public string ImageIconUrl => $"http://retroachievements.org{AchievementSet.ImageIcon}";
         public string ImageBoxArtUrl => $"http://retroachievements.org{AchievementSet.ImageBoxArt}";

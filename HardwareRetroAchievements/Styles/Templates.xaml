@@ -20,4 +20,28 @@
         </Grid>
     </DataTemplate>
 
+    <DataTemplate x:Key="{x:Static styles:Keys.AchievementTemplateKey}" DataType="{x:Type viewModels:AchievementVM}">
+        <Grid HorizontalAlignment="Stretch">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Image Grid.Column="0" 
+                   Height="64"
+                   Width="64"
+                   Source="{Binding BadgeUrl, IsAsync=True}" 
+                   Margin="0,0,10,0"/>
+            <StackPanel Grid.Column="1">
+                <TextBlock 
+                    VerticalAlignment="Center">
+                    <Run Text="{Binding Achievement.Title}" Foreground="{DynamicResource {x:Static styles:Keys.AltTextBrushKey}}"/> (<Run Text="{Binding Achievement.Points}"/>)
+                </TextBlock>
+                <TextBlock 
+                    Text="{Binding Achievement.Description}"
+                    VerticalAlignment="Center"/>
+            </StackPanel>
+
+        </Grid>
+    </DataTemplate>
+    
 </ResourceDictionary>

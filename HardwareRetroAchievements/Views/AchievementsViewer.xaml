@@ -4,8 +4,6 @@
                 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
                 xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
                 xmlns:local="clr-namespace:HardwareRetroAchievements.Views"
-                xmlns:viewModels="clr-namespace:HardwareRetroAchievements.ViewModels"
-                xmlns:styles="clr-namespace:HardwareRetroAchievements.Styles"
                 mc:Ignorable="d" 
                 d:DesignHeight="450" d:DesignWidth="800">
     <Grid>
@@ -15,19 +13,17 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
         <ListBox Grid.Column="0"
-                ItemsSource="{Binding AllAchievementsVMs}"
-                SelectedItem="{Binding SelectedAchievementSetVM}"
-                 HorizontalAlignment="Stretch"
+                 ItemsSource="{Binding AllAchievementsVMs}"
+                 SelectedItem="{Binding SelectedAchievementSetVM}"
                  Background="{DynamicResource {x:Static SystemColors.ControlLightBrushKey}}"
                  BorderBrush="Transparent"
-                 BorderThickness="0"
-                 ItemTemplate="{DynamicResource {x:Static styles:Keys.AchievementSetPreviewTemplateKey}}">
+                 BorderThickness="0">
         </ListBox>
         <GridSplitter Grid.Column="1" 
                       Width="2" 
                       ResizeBehavior="PreviousAndNext"
                       BorderBrush="Black" />
         <local:AchievementSetView Grid.Column="2" 
-                                  DataContext="{Binding SelectedAchievementSetVM}" />
+                                  DataContext="{Binding SelectedAchievementSetVM}"/>
     </Grid>
 </ContentControl>

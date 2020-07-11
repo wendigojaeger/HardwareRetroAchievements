@@ -7,8 +7,9 @@
         xmlns:viewModels="clr-namespace:HardwareRetroAchievements.ViewModels"
         xmlns:providers="clr-namespace:HardwareRetroAchievements.Core.Provider.Impl;assembly=HardwareRetroAchievements.Core"
         mc:Ignorable="d"
-        Title="Hardware Retro Achievements" Height="800" Width="1024">
-    <views:AchievementsViewer x:Name="AchievementsViewer">
+        Title="Hardware Retro Achievements" Height="800" Width="1024"
+        MinWidth="1024">
+    <views:AchievementsViewer x:Name="AchievementsViewer" VerticalAlignment="Stretch">
         <views:AchievementsViewer.DataContext>
             <viewModels:AchievementsViewerVM>
                 <viewModels:AchievementsViewerVM.AchievementsProvider>
