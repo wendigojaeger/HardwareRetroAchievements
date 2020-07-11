@@ -11,7 +11,7 @@ namespace HardwareRetroAchievements.Core.AchievementData
         public int Flags { get; set; } // TODO: Find more documentation on this, 5 = Unofficial, 3 = Official
         public string ImageIcon { get; set; }
         public string ImageTitle { get; set; }
-        public string ImageInGame { get; set; }
+        public string ImageIngame { get; set; }
         public string ImageBoxArt { get; set; }
         public string Publisher { get; set; }
         public string Developer { get; set; }
