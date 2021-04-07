@@ -24,6 +24,32 @@ namespace HardwareRetroAchievements.Core.Evaluator
         BitCount
     }
 
+    public static class MemoryAddressKindExtensions
+    {
+        public static int ByteSize(this MemoryAddressKind kind)
+        {
+            return kind switch
+            {
+                MemoryAddressKind.Bit0 => 1,
+                MemoryAddressKind.Bit1 => 1,
+                MemoryAddressKind.Bit2 => 1,
+                MemoryAddressKind.Bit3 => 1,
+                MemoryAddressKind.Bit4 => 1,
+                MemoryAddressKind.Bit5 => 1,
+                MemoryAddressKind.Bit6 => 1,
+                MemoryAddressKind.Bit7 => 1,
+                MemoryAddressKind.Lower4 => 1,
+                MemoryAddressKind.Upper4 => 1,
+                MemoryAddressKind.Int8 => 1,
+                MemoryAddressKind.Int16 => 2,
+                MemoryAddressKind.Int24 => 3,
+                MemoryAddressKind.Int32 => 4,
+                MemoryAddressKind.BitCount => 1,
+                _ => 0,
+            };
+        }
+    }
+
     public enum OperandType
     {
         Standard,
@@ -54,6 +80,23 @@ namespace HardwareRetroAchievements.Core.Evaluator
         Greater,
         LessEquals,
         GreaterEquals,
+    }
+
+    public static class ConditionCompareExtensions
+    {
+        public static string ToStr(this ConditionCompare value)
+        {
+            return value switch
+            {
+                ConditionCompare.Equals => "==",
+                ConditionCompare.NotEquals => "!=",
+                ConditionCompare.Less => "<",
+                ConditionCompare.Greater => ">",
+                ConditionCompare.LessEquals => "<=",
+                ConditionCompare.GreaterEquals => ">=",
+                _ => "",
+            };
+        }
     }
 
     public class AST
@@ -87,13 +130,13 @@ namespace HardwareRetroAchievements.Core.Evaluator
 
     public class MemoryAddressAST : OperandAST
     {
-        public long Address { get; set; }
+        public int Address { get; set; }
         public MemoryAddressKind Kind { get; set; }
     }
 
     public class NumberAST : OperandAST
     {
-        public long Value { get; set; }
+        public int Value { get; set; }
     }
 
     // Achievement condition parser grammar (ANTLR style)
@@ -424,7 +467,7 @@ namespace HardwareRetroAchievements.Core.Evaluator
                 {
                     Flag = flag,
                     Type = type,
-                    Value = parseNumber()
+                    Value = (int)parseNumber()
                 };
             }
             else
@@ -454,7 +497,7 @@ namespace HardwareRetroAchievements.Core.Evaluator
                 return new MemoryAddressAST
                 {
                     Kind = kindPeek.Value,
-                    Address = parseHexNumber()
+                    Address = (int)parseHexNumber()
                 };
             }
             else

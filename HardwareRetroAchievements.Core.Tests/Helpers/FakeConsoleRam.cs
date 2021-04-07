@@ -12,17 +12,17 @@ namespace HardwareRetroAchievements.Core.Tests.Helpers
             Data = new byte[ramSize];
         }
 
-        public byte ReadInt8(long address)
+        public byte ReadInt8(int address)
         {
             return Data[address];
         }
 
-        public ushort ReadInt16(long address)
+        public ushort ReadInt16(int address)
         {
-            return BitConverter.ToUInt16(Data, (int)address);
+            return BitConverter.ToUInt16(Data, address);
         }
 
-        public uint ReadUInt24(long address)
+        public uint ReadUInt24(int address)
         {
             var byte1 = Data[address];
             var byte2 = Data[address + 1];
@@ -31,7 +31,7 @@ namespace HardwareRetroAchievements.Core.Tests.Helpers
             return (uint)(byte1 | (byte2 << 8) | (byte3 << 16));
         }
 
-        public uint ReadUInt32(long address)
+        public uint ReadUInt32(int address)
         {
             return BitConverter.ToUInt32(Data, (int)address);
         }

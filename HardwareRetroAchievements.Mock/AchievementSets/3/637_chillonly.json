@@ -1,0 +1,69 @@
+{
+    "ID": 637,
+    "Title": "Mega Man X",
+    "ConsoleID": 3,
+    "ForumTopicID": 244,
+    "Flags": 0,
+    "ImageIcon": "/Images/032816.png",
+    "ImageTitle": "/Images/000018.png",
+    "ImageIngame": "/Images/000019.png",
+    "ImageBoxArt": "/Images/015026.png",
+    "Publisher": "Capcom",
+    "Developer": "Capcom",
+    "Genre": "Action, Platforming",
+    "Released": "December 17, 1993 (US/JP V1.1 ROM REQUIRED)",
+    "IsFinal": false,
+    "ConsoleName": "SNES",
+    "RichPresencePatch": "Format:Health\r\nFormatType=VALUE\r\n\r\nFormat:Lives\r\nFormatType=VALUE\r\n\r\nLookup:Stage\r\n0x00=the Prologue (or Menus)\r\n0x01=Launch Octopus's\r\n0x02=Sting Chameleon's\r\n0x03=Armored Armadillo's\r\n0x04=Flame Mammoth's\r\n0x05=Storm Eagle's\r\n0x06=Spark Mandrill's\r\n0x07=Boomer Kuwanger's\r\n0x08=Chill Penguin's\r\n0x09=Sigma's 1st\r\n0x0a=Sigma's 2nd\r\n0x0b=Sigma's 3rd\r\n0x0c=Sigma's Final\r\n\r\n\r\nDisplay:\r\nX is bustin' up @Stage(0x1F7A) stage.  🚶:@Lives(0xl1f80)",
+    "Achievements": [
+        {
+            "ID": 2204,
+            "MemAddr": "0xH001f7a=8_R:0xH000e72!=2_0xH000e8f=32.10._0xH000e8f=0_0xH000bbf=80",
+            "Title": "Chill Penguin",
+            "Description": "Defeat Chill Penguin",
+            "Points": 5,
+            "Author": "Jaarl",
+            "Modified": 1511117006,
+            "Created": 1376536928,
+            "BadgeName": "56877",
+            "Flags": 3
+        },
+        {
+            "ID": 2225,
+            "MemAddr": "R:0xH001f7a!=8_R:0x 000bad!=2528_R:0x 000bb0!=639_0xH000c78>d0xH000c78.1._0xP001f99>d0xP001f99.1.",
+            "Title": "Boots Upgrade",
+            "Description": "Get the ability to dash with the boots upgrade!",
+            "Points": 2,
+            "Author": "Jaarl",
+            "Modified": 1511117034,
+            "Created": 1376537057,
+            "BadgeName": "56888",
+            "Flags": 3
+        },
+        {
+            "ID": 2205,
+            "MemAddr": "0xH001f7a=8_R:0xH000e72!=2_0xH000e8f=32.10._R:0xH000bdb!=0_0xH000bbf=80",
+            "Title": "Busting the Penguin",
+            "Description": "Defeat Chill Penguin using only the X-Buster",
+            "Points": 5,
+            "Author": "Jaarl",
+            "Modified": 1511117073,
+            "Created": 1376536936,
+            "BadgeName": "56907",
+            "Flags": 3
+        },
+        {
+            "ID": 2206,
+            "MemAddr": "0xH001f7a=8_R:0xH000e72!=2_0xH000e8f=32.10._R:0xH000bcf<d0xH000bcf_0xH000bbf=80_0xH000baa=28.1.",
+            "Title": "Melt the Ice",
+            "Description": "Defeat Chill Penguin without taking damage",
+            "Points": 10,
+            "Author": "Jaarl",
+            "Modified": 1511117096,
+            "Created": 1376536943,
+            "BadgeName": "56916",
+            "Flags": 3
+        }
+    ],
+    "Leaderboards": []
+}

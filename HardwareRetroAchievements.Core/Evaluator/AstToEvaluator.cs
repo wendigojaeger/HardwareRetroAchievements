@@ -8,6 +8,13 @@ namespace HardwareRetroAchievements.Core.Evaluator
 {
     public static class AstToEvaluator
     {
+        public static AchievementInstruction FromString(string input)
+        {
+            Parser parser = new Parser();
+            var rootAst = parser.Parse(input);
+            return FromAST(rootAst);
+        }
+
         public static AchievementInstruction FromAST(RootAST rootAst)
         {
             return enterRootAST(rootAst);

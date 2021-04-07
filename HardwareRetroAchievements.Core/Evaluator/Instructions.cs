@@ -1,7 +1,7 @@
-﻿using HardwareRetroAchievements.Core.Console;
-using Microsoft.VisualBasic;
+﻿//#define DEBUG_EVALUATOR
+using HardwareRetroAchievements.Core.Console;
+using System;
 using System.Collections.Generic;
-using System.Net.WebSockets;
 using System.Numerics;
 
 namespace HardwareRetroAchievements.Core.Evaluator
@@ -12,7 +12,7 @@ namespace HardwareRetroAchievements.Core.Evaluator
         public bool? OrNext = null;
         public int? AddValue = null;
         public int? AddHits = null;
-        public long? AddAddress = null;
+        public int? AddAddress = null;
         public int? MeasuredValue = null;
         public int? MeasuredTarget = null;
         public bool CanMeasure = true;
@@ -35,7 +35,7 @@ namespace HardwareRetroAchievements.Core.Evaluator
 
     public class ConstValue : Value
     {
-        private readonly int _constValue;
+        internal readonly int _constValue;
 
         public ConstValue(int value)
         {
@@ -45,6 +45,11 @@ namespace HardwareRetroAchievements.Core.Evaluator
         public override int GetValue(IConsoleRam ram, EvaluatorContext context)
         {
             return _constValue;
+        }
+
+        public override string ToString()
+        {
+            return _constValue.ToString();
         }
     }
 
@@ -64,6 +69,11 @@ namespace HardwareRetroAchievements.Core.Evaluator
             var result = _previousValue;
             _previousValue = current;
             return result;
+        }
+
+        public override string ToString()
+        {
+            return $"d{_child}";
         }
     }
 
@@ -91,11 +101,16 @@ namespace HardwareRetroAchievements.Core.Evaluator
 
             return _priorValue;
         }
+
+        public override string ToString()
+        {
+            return $"p{_child}";
+        }
     }
 
     public class ReadMemoryValue : Value
     {
-        public long Address { get; set; }
+        public int Address { get; set; }
         public MemoryAddressKind Kind { get; set; }
 
         public override int GetValue(IConsoleRam ram, EvaluatorContext context)
@@ -186,6 +201,11 @@ namespace HardwareRetroAchievements.Core.Evaluator
 
             return 0;
         }
+
+        public override string ToString()
+        {
+            return $"0x{Address:x}";
+        }
     }
 
     public class CompareInstruction
@@ -214,6 +234,10 @@ namespace HardwareRetroAchievements.Core.Evaluator
                 leftValue = context.AddValue.Value + leftValue;
                 context.AddValue = null;
             }
+
+#if DEBUG_EVALUATOR
+            System.Diagnostics.Debug.Write($"{Left}({leftValue}) {Operation.ToStr()} {Right}({rightValue})");
+#endif
 
             return Operation switch
             {
@@ -281,6 +305,10 @@ namespace HardwareRetroAchievements.Core.Evaluator
                 context.TempTotalHit = hitCountToCheck;
                 context.AddHits = null;
             }
+
+#if DEBUG_EVALUATOR
+            System.Diagnostics.Debug.WriteLine($" {result} ({CurrentHitCount} / {TargetHitCount})");
+#endif
 
             return result;
         }
@@ -416,6 +444,44 @@ namespace HardwareRetroAchievements.Core.Evaluator
                     return false;
                 }
 
+#if DEBUG_EVALUATOR
+                switch (instruction)
+                {
+                    case ResetIfConditionInstruction _:
+                        System.Diagnostics.Debug.Write("R:");
+                        break;
+                    case PauseIfConditionInstruction _:
+                        System.Diagnostics.Debug.Write("P:");
+                        break;
+                    case AndNextConditionInstruction _:
+                        System.Diagnostics.Debug.Write("N:");
+                        break;
+                    case OrNextConditionInstruction _:
+                        System.Diagnostics.Debug.Write("O:");
+                        break;
+                    case AddSourceConditionInstruction _:
+                        System.Diagnostics.Debug.Write("A:");
+                        break;
+                    case SubSourceConditionInstruction _:
+                        System.Diagnostics.Debug.Write("B:");
+                        break;
+                    case AddHitsConditionInstruction _:
+                        System.Diagnostics.Debug.Write("C:");
+                        break;
+                    case AddAddressConditionInstruction _:
+                        System.Diagnostics.Debug.Write("I:");
+                        break;
+                    case MeasureConditionInstruction _:
+                        System.Diagnostics.Debug.Write("M:");
+                        break;
+                    case MeasureIfConditionInstruction _:
+                        System.Diagnostics.Debug.Write("Q:");
+                        break;
+                    default:
+                        break;
+                }
+#endif
+
                 var currentResult = instruction.Evaluate(ram, context);
 
                 switch (instruction)
@@ -431,6 +497,11 @@ namespace HardwareRetroAchievements.Core.Evaluator
 
                                 context.MeasuredTarget = null;
                                 context.MeasuredValue = null;
+                                currentResult = false;
+                            }
+                            else
+                            {
+                                currentResult = true;
                             }
                         }
                         break;
@@ -484,7 +555,7 @@ namespace HardwareRetroAchievements.Core.Evaluator
         public List<ConditionGroupInstruction> Alternates = new List<ConditionGroupInstruction>();
         public EvaluatorContext Context { get; private set; } = new EvaluatorContext();
 
-        internal IEnumerable<ConditionInstruction> AllConditions()
+        public IEnumerable<ConditionInstruction> AllConditions()
         {
             foreach (var instruction in Core.Conditions)
             {
@@ -520,6 +591,29 @@ namespace HardwareRetroAchievements.Core.Evaluator
             }
 
             return coreSet;
+        }
+
+        public (int LowerAddress, int MaxSize) FindOptimalAddressAndSize()
+        {
+            int lowerAddress = int.MaxValue;
+            int higherAddress = 0;
+
+            foreach (var condition in AllConditions())
+            {
+                if (condition.CompareInstruction.Left is ReadMemoryValue leftReadAddress)
+                {
+                    lowerAddress = Math.Min(lowerAddress, leftReadAddress.Address);
+                    higherAddress = Math.Max(higherAddress, leftReadAddress.Address + leftReadAddress.Kind.ByteSize());
+                }
+
+                if (condition.CompareInstruction.Right is ReadMemoryValue rightReadAddress)
+                {
+                    lowerAddress = Math.Min(lowerAddress, rightReadAddress.Address);
+                    higherAddress = Math.Max(higherAddress, rightReadAddress.Address + rightReadAddress.Kind.ByteSize());
+                }
+            }
+
+            return (lowerAddress, higherAddress - lowerAddress);
         }
     }
 }
