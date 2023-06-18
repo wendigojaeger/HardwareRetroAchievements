@@ -16,9 +16,13 @@ namespace HardwareRetroAchievements.ViewModels
                 return false;
 
             member = value;
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-
+            RaisePropertyChanged(propertyName);
             return true;
+        }
+
+        public void RaisePropertyChanged([CallerMemberName] string propertyName = "")
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 }

@@ -1,4 +1,8 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
     <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="/HardwareRetroAchievements;component/Styles/Colors.xaml"/>
+        <ResourceDictionary Source="/HardwareRetroAchievements;component/Styles/Converters.xaml"/>
+        <ResourceDictionary Source="/HardwareRetroAchievements;component/Styles/Styles.xaml"/>
+        <ResourceDictionary Source="/HardwareRetroAchievements;component/Styles/Templates.xaml"/>
     </ResourceDictionary.MergedDictionaries>
 </ResourceDictionary>

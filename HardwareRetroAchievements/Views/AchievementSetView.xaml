@@ -4,35 +4,85 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:HardwareRetroAchievements.Views"
+             xmlns:styles="clr-namespace:HardwareRetroAchievements.Styles"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
+    <UserControl.Style>
+        <Style TargetType="{x:Type UserControl}">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding}" Value="{x:Null}">
+                    <Setter Property="Visibility" Value="Hidden" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Style>
 
-    <StackPanel>
-        <StackPanel.Style>
-            <Style TargetType="{x:Type StackPanel}">
-                <Style.Triggers>
-                    <DataTrigger Binding="{Binding}" Value="{x:Null}">
-                        <Setter Property="Visibility" Value="Hidden" />
-                    </DataTrigger>
-                </Style.Triggers>
-            </Style>
-        </StackPanel.Style>
-        <StackPanel Orientation="Horizontal" Height="100" VerticalAlignment="Top">
-            <Image Source="{Binding IconUrl}" Stretch="Uniform" />
-            <TextBlock Text="{Binding AchievementSet.Title}" 
-                   VerticalAlignment="Center" 
-                   FontSize="50" 
-                   />
+    <DockPanel>
+        <TextBlock DockPanel.Dock="Top" VerticalAlignment="Center" 
+                       FontSize="30">
+                <Run Text="{Binding AchievementSet.Title}"/> (<Run Text="{Binding AchievementSet.ConsoleName}"/>)
+        </TextBlock>
+        <Border DockPanel.Dock="Top"
+                Margin="0,5,0,5" 
+                BorderBrush="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" 
+                BorderThickness="1" />
+        <StackPanel>
+            <!-- Game Info -->
+            <StackPanel Orientation="Vertical"
+                    Background="{DynamicResource {x:Static styles:Keys.ControlVeryLightBrushKey}}">
+                <DockPanel Margin="5">
+                    <Image DockPanel.Dock="Left"
+                       Source="{Binding ImageIconUrl, IsAsync=True}"
+                       Width="96"
+                       Height="96"/>
+                    <Grid Margin="5,0,5,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Column="0" Grid.Row="0" Text="Developer : " TextWrapping="Wrap"/>
+                        <TextBlock Grid.Column="1" Grid.Row="0" Text="{Binding AchievementSet.Developer}" FontWeight="Bold" />
+
+                        <TextBlock Grid.Column="0" Grid.Row="1" Text="Publisher : "/>
+                        <TextBlock Grid.Column="1" Grid.Row="1" Text="{Binding AchievementSet.Publisher}" FontWeight="Bold" />
+
+                        <TextBlock Grid.Column="0" Grid.Row="2" Text="Genre : "/>
+                        <TextBlock Grid.Column="1" Grid.Row="2" Text="{Binding AchievementSet.Genre}" FontWeight="Bold" />
+
+                        <TextBlock Grid.Column="0" Grid.Row="3" Text="First Released : "/>
+                        <TextBlock Grid.Column="1" Grid.Row="3" Text="{Binding AchievementSet.Released}" FontWeight="Bold" />
+                    </Grid>
+                </DockPanel>
+                <Grid HorizontalAlignment="Left">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <Image Grid.Column="0"
+                       Source="{Binding ImageTitleUrl, IsAsync=True}" 
+                       Width="256"
+                       Margin="5"/>
+                    <Image Grid.Column="1"
+                       Source="{Binding ImageInGameUrl, IsAsync=True}" 
+                       Width="256"
+                       Margin="5"/>
+                </Grid>
+            </StackPanel>
+
+            <ListBox ItemsSource="{Binding AllAchievements}"
+                     ItemContainerStyle="{DynamicResource {x:Static styles:Keys.AlternatingBackgroundItemStyleKey}}"
+                     AlternationCount="2"
+                     Style="{DynamicResource {x:Static styles:Keys.NoSelectionListBoxStyleKey}}"/>
         </StackPanel>
-        <Grid>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
-            <TextBlock Grid.Column="0" Text="Publisher : "/>
-            <TextBlock Grid.Column="1" Text="{Binding AchievementSet.Publisher}" />
-        </Grid>
-    </StackPanel>
 
+    </DockPanel>
 
 </UserControl>
